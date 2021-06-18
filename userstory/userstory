@@ -1,0 +1,93 @@
+This is the user story of the mobile app. It highlights what each user will be able to do and 
+this then will be translated into code. This is part of Agile Software Development Process
+
+User
+
+a. As a user I can see all options available to me like all the utitility bills I can pay and investment options. 
+
+b. As a user I can fund my wallet from my bank using my card. 
+
+c. As a user I can fund my wallet using unique bank account number provided by digitmoni
+
+d. As a user I can withdraw money from my wallet, to my bank account or any account of my choice
+
+e. As a user I can also see my investment history 
+
+f. As a user i can see view my utility purchase history
+
+g. As a user i can make a complain via the app. 
+
+h. I can continue using my account as default membership account or I can upgrad to partner
+
+i. I can easily make my monthly partnership payment. 
+
+j. As a partner I can make pay utilities and buy airtime at higher discounts.
+
+k. As a user I can upload at least one profile picture if I want 
+
+l. As a user I can edit or delete the uploaded profile picture.
+
+m. As a user I can view and edit my profile.
+
+n. As a user, I can reset my password via email otp if I forget it.
+
+o. As a user I can change my password
+
+
+
+Investment 
+
+a. As a user I can chose from the investment options available. 
+
+b. As a user I can decide whether or not my investment should be fixed or flex
+
+c. As a user I can chose whether or not rollover of interest should apply to my investment or
+if I want my interest sent to me monthly.
+
+d. As a user I can cancel any of my investments anytime.
+
+
+
+Investment Admin
+
+a. As an investment admin, I can create new investment packages and set the rules for the packages 
+like interest rate, minimum duration, cancellation costs etc. 
+
+b. I can suspend an existing investment package.
+
+c. I can create a new investment admin account
+
+d. As investment admin, I can see all investments by all users and I can view these user profiles.
+
+e. As investment admin, i can search investments with reference Id of the investment and view its details.
+
+f. As an investment admin, I can cancel a user's investment if necessary.
+
+
+
+
+Utility Admin
+
+a. As utitility admin, I can create new view all utility options we have 
+
+b. As utility adm I can set prices and discounts for various users(members and partners)
+
+c. As utility admin, I can search utilities using the reference and view all details regarding any of them
+
+d. I can also purchase utility for users from my own panel
+
+f. I can suspend users from purchasing utilities if need be
+
+g. I can see all the utility purchase metrics of users.
+
+
+
+Super Admin
+
+a. As a super admin, I can create other admins and users.
+
+b. As a super admin, I can suspend other admins and users
+
+c. As a super admin, I can do all that utility and investment admin can do
+
+d. I can view overall analytics dashboard
