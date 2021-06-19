@@ -1,6 +1,6 @@
 <?php 
 
-class TV{
+class TV extends Transactions{
   //declaring model variables
   private $_TVID;
   private $_userID;
@@ -64,7 +64,13 @@ class TV{
   }
 
   //main model methods
+  public function newTVtrxtn(){
 
+  }
+
+  public function viewTVtrxtn(){
+    
+  }
 
 
 }

@@ -1,18 +1,22 @@
 <?php 
 namespace database;
+use \PDO;
+use \PDOException;
 
 class DataBase{
   private static $_instance = null;
   private $_pdo, $_query, $_error = false, $_result, $_count = 0, $_lastInsertID = null;
 
-  private function __construct(){
-    try{
-      $this->_pdo = new PDO('mysql:host='.DB_HOST.';dbname='.DB_NAME, DB_USER, DB_PASSWORD);
-
-    }catch(PDOException $err){
-      die($err->getMessage());
+  private function __construct() {
+    try {
+      $this->_pdo = new PDO('mysql:host=127.0.0.1;dbname=digitmoni_app;charset=utf8', 'root', '');
+      $this->_pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+      $this->_pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+    } catch(PDOException $e) {
+      die($e->getMessage());
     }
   }
+
 
   public static function getInstance(){
     if(!isset(self::$_instance)){
@@ -21,7 +25,7 @@ class DataBase{
     return self::$_instance;
   }
 
-  public function query($sql, $params = [], $class=false){
+  public function query($sql, $params = [],$class = false) {
     $this->_error = false;
     if($this->_query = $this->_pdo->prepare($sql)) {
       $x = 1;

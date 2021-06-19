@@ -1,26 +1,19 @@
 <?php
 use database\DataBase;
+use model\Model;
+
 class User{
   private $_userID, $_firstname, $_lastname,$_username,$_email, $_password,$_created_at,$_state, $_activity
-  , $_address, $_phone, $_acl = [],$_entrycode,$_ref_code, $_accType, $_createdBy, $_suspendedBy, $_suspendedAt;
+  , $_address, $_phone, $_acl = NULL,$_entrycode,$_ref_code, $_accType, $_createdBy, $_suspendedBy, $_suspendedAt;
 
-  private $_db = DataBase::getInstance();
+
   private $_table = 'users';
-  
-  public    $fields = [
-    //'idusers' => $this->getUserID,
-    'first_name'=> $this->getFirstName(),
-    'lastname'=> $this->getLastname(),
-    'username'=> $this->getEmail(),
-    'password'=>$this->getPassword(),
-    'created_at'=>$this->getDateTime(),	
-    'state'=>$this->getState(), 	
-    'addres'=>$this->getAddress(), 	
-    'phone'=>	$this->getAcl(),	
-    'entry_code' =>$this->getEntryCode(),	
-    'ref_code'=>$this->getRefcode(),	
-    'acc_type'=>$this->getAccType()
-  ];
+  //private $_db;
+
+  public function _db(){
+    return $_db = DataBase::getInstance(); 
+  }
+
 
 
   public function setID(int $id){
@@ -48,7 +41,7 @@ class User{
   }
 
   public function setDateTime(string $created_at){
-    $this->_created = $created_at;
+    $this->_created_at = $created_at;
   }
 
   public function setState(string $state){
@@ -59,12 +52,20 @@ class User{
     $this->_address = $address;
   }
 
+  public function setActivity(string $activity){
+    $this->_activity = $activity;
+  }
+
   public function setPhone(string $phone){
     $this->_phone = $phone;
   }
 
-  public function setAcl(array $acl){
+  public function setAcl($acl){
     $this->_acl = $acl;
+  }
+
+  public function setAccType($accType){
+    $this->_accType =$accType;
   }
 
   public function setEntryCode(int $entryCode){
@@ -119,6 +120,10 @@ class User{
     return $this->_address;
   }
    
+  public function getActivity(){
+    return $this->_activity;
+  }
+
   public function getPhone(){
     return $this->_phone;
   }
@@ -126,6 +131,7 @@ class User{
   public function getAcl(){
     return $this->_acl;
   }
+
 
   public function getEntryCode(){
     return $this->_entrycode;
@@ -152,6 +158,7 @@ class User{
   }
 
   public function setUsers($firstname, $lastname, $username, $email, $password, $created_at, $state, $address, $acl, $phone, $entryCode, $refcode, $accType){
+    //print($created_at);
     $this->setFirstName($firstname);
     $this->setLastName($lastname);
     $this->setUserName($username);
@@ -159,6 +166,7 @@ class User{
     $this->setPassword($password);
     $this->setDateTime($created_at);
     $this->setState($state);
+    $this->setAccType($accType);
     $this->setAddress($address);
     $this->setAcl($acl);
     $this->setPhone($phone);
@@ -171,7 +179,7 @@ class User{
     $userArray['firstname'] = $this->getFirstName();
     $userArray['lastname'] = $this->getLastname();
     $userArray['username'] = $this->getUserName();
-    $userArray['password'] = $this->getPassword();
+    $userArray['pword'] = $this->getPassword();
     $userArray['created_at'] = $this->getDateTime();
     $userArray['state'] = $this->getState();
     $userArray['address'] = $this->getPhone();
@@ -183,48 +191,54 @@ class User{
   }
 
   public function createUser(){
-    // declare variables
-    // $firstname = $this->getFirstName();
-    // $lastname = $this->getLastname();
-    // $username = $this->getUserName();
-    // $email = $this->getEmail();
-    // $phone = $this->getPhone();
-    // $state = $this->getState();
-    // $address = $this->getAddress();
-    // $created_at = $this->getDateTime();
-    // $password = $this->getPassword();
-    $fields = $this->field;
-
-    $this->_db->query("INSERT INTO $this->_table WHERE first_name = ? 
-    and lastname=? and username=? and  `password`=? and created_at=?
-     and `state`=? and `addres`= ? and phone =? and entry_code =? and ref_code =? 
+   //dnd("Ike");
+    $fields = [
+      //'idusers' => $this->getUserID,
+      'first_name'=> $this->getFirstName(),
+      'lastname'=>$this->getLastname(),
+      'username'=>$this->getEmail(),
+      'pword'=>$this->getPassword(),
+      'created_at'=>$this->_created_at,	
+      'state'=>$this->getState(), 	
+      'addres'=>$this->getAddress(), 	
+      'phone'=>	$this->getPhone(),	
+      'acl'=>$this->getAcl(),
+      'entry_code' =>$this->getEntryCode(),	
+      'ref_code'=>$this->getRefcode(),	
+      'acc_type'=>$this->getAccType()
+    ];
+    // var_dump($fields);
+    // die();
+    $this->_db()->query("INSERT INTO users WHERE first_name = ? 
+    and lastname=? and username=? and  pword=? and created_at=?
+     and `state`=? and addres= ? and phone =? and acl=? and entry_code =? and ref_code =? 
      and acc_type =?", $fields);
     
-    $this->_db->insert($this->_table, $fields);
+    $this->_db()->insert('users', $fields);
   }
 
-  public function viewUser(int $userID){
-    $this->_db->findFirst(['conditions'=>"id = ?", 'bind'=>[$userID]]);
+  public function viewUser($userID){
+    $details = $this->_db()->findFirst($this->_table,['conditions'=>'id = ?', 'bind'=>[$userID]]);
+    return $details;
   }
+
 
   public function deactivateUser(int $userID){
-    $fields = [
-      'activity'=>$this->_activity
-    ];
-    $this->_db->query("UPDATE users SET activity = ? WHERE id = ?", $fields);
-
-    $this->_db->update($this->_table,$userID, $fields);
+    require_once 'Model.php';
+    $fields=['activity'=>'blocked'];
+    $model = new Model($this->_table);
+    $model->update($userID, $fields);
   }
 
   
   public function editUser(int $userID){
     $fields = $this->fields;
-    $this->_db->query("UPDATE users SET first_name = ? 
-    and lastname=? and username=? and  `password`=? and created_at=?
-     and `state`=? and `addres`= ? and phone =? and entry_code =? and ref_code =? 
+    $this->_db()->query("UPDATE users SET first_name = ? 
+    and lastname=? and username=? and  pword=? and created_at=?
+     and `state`=? and addres= ? and phone =? and entry_code =? and ref_code =? 
      and acc_type =? WHERE id = ?", $fields);
 
-    $this->_db->update($this->_table,$userID,$fields);
+    $this->_db()->update($this->_table,$userID,$fields);
   }
 
 
