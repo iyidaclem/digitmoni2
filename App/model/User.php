@@ -1,5 +1,5 @@
 <?php
-
+use database\DataBase;
 class User{
   private $_userID, $_firstname, $_lastname,$_username,$_email, $_password,$_created_at,$_state, $_activity
   , $_address, $_phone, $_acl = [],$_entrycode,$_ref_code, $_accType, $_createdBy, $_suspendedBy, $_suspendedAt;

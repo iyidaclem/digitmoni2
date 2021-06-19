@@ -1,4 +1,5 @@
 <?php 
+namespace database;
 
 class DataBase{
   private static $_instance = null;
