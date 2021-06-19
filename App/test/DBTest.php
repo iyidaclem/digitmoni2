@@ -1,8 +1,9 @@
 <?php 
 
-require_once '/database/DataBase.php';
+require_once '../database/DataBase.php';
 require_once '../core/Response.php';
-require_once '../helpers/debugHelper.php';
+require_once '../model/user.php';
+
 
 
 // function insert(){
@@ -17,5 +18,3 @@ require_once '../helpers/debugHelper.php';
 //   and access_token=? and user_agent=? and token_exp=?", $fields);
 //   $db->insert('session_tb', $fields);
 // }
-
-// insert();
