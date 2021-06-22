@@ -159,8 +159,11 @@ class UserInvestment{
     $this->_db()->query("UPDATE users SET investmendID = ? 
     and username=? and created_at=? and  matures_at=? and inv_reference=?
      and `status`=? and rollover= ?", $fields);
+    $boolVal = '';
+    $update = $this->_db()->update($this->_table,$userID,$fields);
 
-    $this->_db()->update($this->_table,$userID,$fields);
+    $update == true?$boolVal=true:$boolVal = false;
+    return $boolVal;
   }
 
   public function runningUserInvestments(){

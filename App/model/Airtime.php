@@ -1,15 +1,19 @@
 <?php
+namespace model;
+
+use database\DataBase;
+use model\Model;
+
 
 class Airtime{
   //model variables
-  private $_idAirtime;
-  private $_username;
-  private $_reference;
-  private $_network;
+  private $_idAirtime, $_username, $_reference, $_network, $_model, $_db, $_table ='airtimes';
 
-  //database variables
-  private $_writeDB;
-  private $_readDB;
+  //constructor function 
+  public function __construct(){
+    $this->_model = new Model($this->_table);
+    $this->_db = DataBase::getInstance();
+  }
 
   //writing the setter methods
   public function setAirtimeID(int $AirTimeID){
@@ -46,8 +50,17 @@ class Airtime{
   }
 
   public function newAirtime(){
+    $fields= [ 
+      'username'=>$this->getAirtimeUsername(),
+      'reference'=>$this->getAirtimeRef(),	
+      'network'	=>$this->getAirtimeNetwork()
+    ];
 
+    $boolVal = '';
+    $this->_model->insert($fields)==true?$boolVal =true:$boolVal=false;
+    return $boolVal;
   }
+
 
   
 }

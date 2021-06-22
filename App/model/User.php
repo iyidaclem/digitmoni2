@@ -1,7 +1,7 @@
 <?php
 use database\DataBase;
 use model\Model;
-
+require_once 'Model.php';
 class User{
   private $_userID, $_firstname, $_lastname,$_username,$_email, $_password,$_created_at,$_state, $_activity
   , $_address, $_phone, $_acl = NULL,$_entrycode,$_ref_code, $_accType, $_createdBy, $_suspendedBy, $_suspendedAt;
@@ -9,7 +9,11 @@ class User{
 
   private $_table = 'users';
   //private $_db;
-
+  private $model;
+  
+  public function __construct(){
+    $this->model = new Model($this->_table);
+  }
   public function _db(){
     return $_db = DataBase::getInstance(); 
   }
@@ -223,22 +227,47 @@ class User{
   }
 
 
-  public function deactivateUser(int $userID){
-    require_once 'Model.php';
-    $fields=['activity'=>'blocked'];
-    $model = new Model($this->_table);
-    $model->update($userID, $fields);
+  public function alterUserState(int $userID, $activity, $admin=null){
+   //if admin is the one alterning the state, do this
+    if($admin!==null){
+      //register under admin history
+
+    }
+    //then continue to alter state as specified
+    $boolValue = '';
+    $fields=['activity'=>$activity];
+    $this->model->update($userID, $fields)==true?$boolValue =true:$boolValue = false;
+    return $boolValue;
   }
 
   
-  public function editUser(int $userID){
-    $fields = $this->fields;
-    $this->_db()->query("UPDATE users SET first_name = ? 
-    and lastname=? and username=? and  pword=? and created_at=?
-     and `state`=? and addres= ? and phone =? and entry_code =? and ref_code =? 
-     and acc_type =? WHERE id = ?", $fields);
+  public function editUser(int $userID, $admin=null){
+    //if admin is the one editing the user, do this
+    if($admin!==null){
+      //register under admin history
 
-    $this->_db()->update($this->_table,$userID,$fields);
+    }
+    //then continue to edit user as specified
+   
+    $fields=[
+    'first_name'=>$this->getFirstName(),
+    'lastname'=>$this->getLastname(),
+    'username'=>$this->getUserName(),
+    'email'=>$this->getEmail(),
+    'pword'=>$this->getPassword(),
+    'created_at'=>$this->getDateTime(),
+    'state'=>$this->getState(),
+    'addres'=>$this->getAddress(),
+    'phone'=>$this->getPhone(),
+    'acl'=>$this->getAcl(),
+    'entry_code'=>$this->getEntryCode(),
+    'ref_code'=>$this->getRefcode(),
+    'acc_type'=>$this->getAccType(),
+    'activity'=>$this->getActivity()
+    ];
+    $boolValue = '';
+    $this->model->update($userID, $fields)==true?$boolValue =true:$boolValue=false;
+    return $boolValue;
   }
 
 

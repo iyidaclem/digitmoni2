@@ -1,4 +1,9 @@
-<?php 
+<?php
+namespace model;
+
+use database\DataBase;
+use model\Model;
+use model\Transactions;
 
 class TV extends Transactions{
   //declaring model variables
@@ -10,14 +15,13 @@ class TV extends Transactions{
   
   //declaring database variables
   private $_table;
-  private $_writeDB;
-  private $_readDB;
+
 
   //contructor method
-  public function __construct(string $table,string $writeDB,string $readDB){
+  public function __construct(string $table){
     $this->_table = $table;
-    $this->_writeDB = $writeDB;
-    $this->_readDB = $readDB;
+    $this->_model = new Model($this->_table);
+    $this->_db = DataBase::getInstance();
   }
 
   //the setters

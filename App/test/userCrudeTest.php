@@ -9,18 +9,20 @@ require_once '../model/user.php';
 $user = new User();
 
 
-$user->setUsers('Ikechukwu', 'Vincent', 'Ikechukwu',
- 'mr.ikunegu@gmail.com', '199418','2021-06-19','Anambre', 'No. 7 Ankys', null, '08064133376','495894','59840', 'member');
+$user->setUsers('Ikechukwu', 'Ikechukwu', 'Ikechukwu',
+ 'mr.ikunegu@gmail.com', '199416','2021-06-19','Anambra State', 'No. 7 Ankys', null, '08064133376','495894','59840', 'member');
 
 // $user->createUser();
 $userID = [1];
 $userValues = $user->viewUser(1);
 
-$user->setActivity('blocked');
+//$user->setActivity('blocked');
 
-if($user->deactivateUser(1)){
-  echo 'success';
-}else{
-  echo 'fail';
-}
+$editUser =$user->editUser(1);
+echo $editUser;
+// if($user->alterUserState(1, 'blocked') ===true){
+//   echo 'success';
+// }else{
+//   echo 'fail';
+// }
 var_dump($userValues);

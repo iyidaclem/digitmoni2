@@ -1,24 +1,18 @@
-<?php 
+<?php
+namespace model;
+use database\DataBase;
+use model\Model;
 
 class Transactions{
  //declaring Transaction Model variables
-  private $_trxID;
-  private $_userID;
-  private $_username;
-  private $_email;
-  private $_amount;
-  private $_phone;
-  private $_reference;
-  private $_purpose;
-  private $_trans_date;
-
+  private $_trxID, $_userID, $_username, $_email, $_amount, $_phone, $_reference, $_purpose, $_trans_date;
+  private $_table ='transactions', $_db, $_model;
   //declaring database variables.
-  private $_readDB;
-  private $_writeDB;
 
-  public function __construct($writeDB, $readDB){
-    $this->_readDB = $readDB;
-    $this->_writeDB = $readDB;
+
+  public function __construct(){
+    $this->_model = new Model($this->_table);
+    $this->_db = DataBase::getInstance();
   }
 
   //writing the setter methods
@@ -99,12 +93,33 @@ class Transactions{
 
   //Now writing actual methods
 
-  public function inserTrx(){
-    //everybody features
+  public function setTrx(){
+
   }
 
-  public function viewTrx(){
+  public function inserTrx(){
+    //everybody features
+    $fields =[
+      'username'=>$this->getTrxUserID(),	
+      'email'=>$this->getTrxEmail(),	
+      'amount'=>$this->getTrxAmount(),	
+      'phone'=>$this->getTrxPhone(),	
+      'reference'=>$this->getTrxReference(),	
+      'purpose'	=>$this->getTrxPurpose(),
+      'date_time'=>$this->getTrxDateTime()	
+    ];
+
+    $boolvalue = '';
+    $this->_model->insert($fields)==true?$boolvalue=true:$boolvalue=false;
+    return $boolvalue;
+  }
+
+  public function viewTrx($userID, $trxID){
     //evrybody features
+    // $details = $this->_db->findFirst($this->_table, ['conditions'=>'id = ?', 'bind'=>[$trxID]]);
+    // return $details;
+    $details = $this->_model->findByUserIdAndTargetID($userID, $trxID);
+    return $details;
   }
 
   public function listTrx(){
