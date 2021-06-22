@@ -5,16 +5,12 @@ use database\DataBase;
 use model\Model;
 use model\Transactions;
 
-class TV extends Transactions{
+class TV{
   //declaring model variables
-  private $_TVID;
-  private $_userID;
-  private $_bouquet;
-  private $_cardNo;
-  private $_reference;
+  private $_TVID, $_userID, $_bouquet, $_cardNo, $_reference;
   
   //declaring database variables
-  private $_table;
+  private $_table, $_db, $_model;
 
 
   //contructor method
@@ -68,8 +64,23 @@ class TV extends Transactions{
   }
 
   //main model methods
-  public function newTVtrxtn(){
+  public function newTV(){
+    $field = [
+      'username'=>$this->getTvUserID(),
+      'bouquet'=>$this->getTvBouquet(),	
+      'card_no'=>$this->getTvCardNo(),	
+      'reference'=>$this->getTvReference()	
+    ];
+    $value = '';
+    $this->_model->insert($field)==true?$value=true:$value=false;
+    return $value;
+  }
 
+  public function setStatus($reference, $trxStatus){
+    $boolVal = '';
+    $fields = ['status'=>$trxStatus];
+    $this->_model->update($reference, $fields)==true?$boolVal=true:$boolVal=false;
+    return $boolVal;
   }
 
   public function viewTVtrxtn(){

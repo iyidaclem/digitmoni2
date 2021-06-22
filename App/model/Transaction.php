@@ -114,6 +114,10 @@ class Transactions{
     return $boolvalue;
   }
 
+  public function setStatus(){
+    
+  }
+
   public function viewTrx($userID, $trxID){
     //evrybody features
     // $details = $this->_db->findFirst($this->_table, ['conditions'=>'id = ?', 'bind'=>[$trxID]]);
