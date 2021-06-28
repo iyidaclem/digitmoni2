@@ -1,7 +1,8 @@
 <?php
+namespace App\API\Model;
 use database\DataBase;
 use model\Model;
-require_once 'Model.php';
+// require_once 'Model.php';
 class User{
   private $_userID, $_firstname, $_lastname,$_username,$_email, $_password,$_created_at,$_state, $_activity
   , $_address, $_phone, $_acl = NULL,$_entrycode,$_ref_code, $_accType, $_createdBy, $_suspendedBy, $_suspendedAt;

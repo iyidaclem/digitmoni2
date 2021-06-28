@@ -5,7 +5,7 @@ require_once '../../bootstrap.php';
 //instantiating some validation clasess
 $emailValidate = new EmailValidation();
 $maxValidation = new ValidateMaximum(10);
-$minValidation = new ValidateMinimum(6);
+$minValidation = new ValidateMinimium(6);
 $specialChar = new ValidateSpecialChars();
 $noSpaceValidate = new ValidateNoEmptySpace();
 
