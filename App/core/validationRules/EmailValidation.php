@@ -1,4 +1,7 @@
 <?php 
+namespace core\validationRule;
+use _interface\ValidationRuleInterface;
+
 
 class EmailValidation implements ValidationRuleInterface{
 

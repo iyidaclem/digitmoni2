@@ -1,4 +1,6 @@
 <?php 
+namespace core\validationRule;
+use _interface\ValidationRuleInterface;
 
 class ValidateSpecialChars implements ValidationRuleInterface{
 
