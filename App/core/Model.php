@@ -1,7 +1,7 @@
 <?php
 namespace model;
 use database\DataBase;
-
+//REMEMBER TO TAKE CARE OF THE NAME SPACE
 
 class Model{
  
