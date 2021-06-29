@@ -26,7 +26,8 @@ class Router{
 
     //params
     $queryParams = $url;
-    $controller = 'App\Controllers\\' . $controller;
+    $controller = 'API\Controllers\\' . $controller;
+    //var_dump($controller);die();
     $dispatch = new $controller($controller_name, $action);
 
     if(method_exists($controller, $action)) {
@@ -40,7 +41,7 @@ class Router{
 
 
   public static function hasAccess($token, $controller_name, $action_name='index'){
-    $acl_file = file_get_contents(ROOT . ds . 'app' . ds . 'acl.json');
+    $acl_file = file_get_contents(ROOT . ds . 'API' . ds . 'acl.json');
     $acl = json_decode($acl_file, true);
     $current_user_acls = ['member'];
     $grantAccess = false;

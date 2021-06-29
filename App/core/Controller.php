@@ -4,7 +4,7 @@ namespace Core;
 class Controller{
   protected $_controller, $_action;
   public $view, $request;
-
+  
   public function __construct($controller, $action){
     //call the parent Application
     $this->_controller = $controller;

@@ -9,8 +9,8 @@ require_once(ROOT . ds . 'config' . ds . 'config.php');
 function autoload($className){
   $classAry = explode('\\',$className);
   $class = array_pop($classAry);
-  $subPath = strtolower(implode(DS,$classAry));
-  $path = ROOT . DS . $subPath . DS . $class . '.php';
+  $subPath = strtolower(implode(ds,$classAry));
+  $path = ROOT . ds . $subPath . ds . $class . '.php';
   if(file_exists($path)){
     require_once($path);
   }
