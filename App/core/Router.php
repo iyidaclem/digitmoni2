@@ -1,6 +1,6 @@
 <?php
 namespace core;
-
+use core\User;
 
 class Router{
   public static function route($url) {
