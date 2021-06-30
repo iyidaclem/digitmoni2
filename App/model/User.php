@@ -242,30 +242,13 @@ class User{
   }
 
   
-  public function editUser(int $userID, $admin=null){
+  public function editUser(int $userID,$fields, $admin=null){
     //if admin is the one editing the user, do this
     if($admin!==null){
       //register under admin history
 
     }
     //then continue to edit user as specified
-   
-    $fields=[
-    'first_name'=>$this->getFirstName(),
-    'lastname'=>$this->getLastname(),
-    'username'=>$this->getUserName(),
-    'email'=>$this->getEmail(),
-    'pword'=>$this->getPassword(),
-    'created_at'=>$this->getDateTime(),
-    'state'=>$this->getState(),
-    'addres'=>$this->getAddress(),
-    'phone'=>$this->getPhone(),
-    'acl'=>$this->getAcl(),
-    'entry_code'=>$this->getEntryCode(),
-    'ref_code'=>$this->getRefcode(),
-    'acc_type'=>$this->getAccType(),
-    'activity'=>$this->getActivity()
-    ];
     $boolValue = '';
     $this->model->update($userID, $fields)==true?$boolValue =true:$boolValue=false;
     return $boolValue;
