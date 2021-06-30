@@ -34,4 +34,5 @@ class Input{
     return FH::sanitize($_REQUEST[$input]);
   }
 
+ 
 }

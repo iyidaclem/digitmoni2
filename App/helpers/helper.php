@@ -1,4 +1,5 @@
 <?php 
+use core\Input;
 
 function Unique_Id_Gen($for, $digit = null){
   is_null($digit) == false? $length = $digit: $length = 10;
@@ -39,6 +40,7 @@ function date_time(){
   return $today;
 }
 
+
 function check_key($http_array_key){
   if(!array_key_exists($http_array_key, $_GET)){
     $response = new Response();
@@ -50,3 +52,4 @@ function check_key($http_array_key){
     $response = new Response();
     $response->SendResponse(400, false, 'Empty query key.');
   }
+}

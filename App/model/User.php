@@ -1,5 +1,5 @@
 <?php
-namespace App\API\Model;
+namespace model;
 use database\DataBase;
 use model\Model;
 // require_once 'Model.php';
