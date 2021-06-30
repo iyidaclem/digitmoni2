@@ -3,8 +3,12 @@ namespace core;
 use core\User;
 
 class Router{
+  private $_server;
   public static function route($url) {
 
+    $server= $_SERVER['HTTP_AUTHORIZATION'];
+    print($server);
+    die();
     //controller
     $controller = (isset($url[0]) && $url[0] != '') ? ucwords($url[0]).'Controller' : DEFAULT_CONTROLLER.'Controller';
     $controller_name = str_replace('Controller','',$controller);

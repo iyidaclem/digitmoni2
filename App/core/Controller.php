@@ -1,7 +1,9 @@
 <?php 
 namespace Core;
 
-class Controller{
+use core\Application;
+
+class Controller extends Application{
   protected $_controller, $_action;
   public $view, $request;
   
