@@ -21,6 +21,32 @@ class UserController extends Controller{
       'message'=>'Only Post Requests are allowed.',
       'data'=>[]
     ]);
-    $userID==null?$userID = User::currentUser():
+    $userID==null?$userID = Users::currentUser():$userID=null;
+    $user = new Users();
+    $details = $user->viewUser($userID);
+
+    return $this->jsonResponse([
+      'status'=>'fail',
+      'http'=>401,
+      'message'=>'Only Post Requests are allowed.',
+      'data'=>$details
+    ]);
+
+  }
+
+  public function editAction(){
+
+  }
+
+  public function createAction(){
+
+  }
+
+  public function loginAction(){
+
+  }
+
+  public function logoutAction(){
+    
   }
 }
