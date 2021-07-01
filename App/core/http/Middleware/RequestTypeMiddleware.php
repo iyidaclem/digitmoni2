@@ -2,5 +2,5 @@
 namespace core\http\Middleware;
 
 class RequestTypeMiddleware{
-  
+ 
 }

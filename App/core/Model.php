@@ -5,7 +5,7 @@ use database\DataBase;
 
 class Model{
  
-  private $_table;
+  public $_table;
  
 
   public function __construct($table)

@@ -15,12 +15,14 @@ class UserController extends Controller{
   private $input;
   private $model;
   private $db;
+  private $user;
 
   public function __construct($controller, $action) {
     parent::__construct($controller, $action);
     $this->input = new Input();
     $this->model = new CoreModel('users');
     $this->db = new DataBase();
+    $this->user = new Users();
   }
 
   //this index action will view the current users profile and or that of any supplied id
@@ -154,8 +156,10 @@ class UserController extends Controller{
           "data"=>[]
         ]);
       }
-      //Create new account in the database
-      if($this->model->insert($fields)) return $this->jsonResponse([
+      //Create new account in the database and if it is successful, iniatialize it in fund_user table
+      if($this->model->insert($fields)) $this->user->initializeAccount($sanitized['username']);
+      //Now send response 
+      return $this->jsonResponse([
         "http_status_code"=>200,
         "status"=>true, 
         "message"=>'',

@@ -19,6 +19,9 @@ class Middleware{
         $randomString .= $this->char[rand(0, $charactersLength - 1)];
     }
     return $randomString;
-}
+  }
 
+  public function loggedUser(){
+    return true;
+  }
 }
