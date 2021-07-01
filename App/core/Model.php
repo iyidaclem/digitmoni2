@@ -1,5 +1,5 @@
 <?php
-namespace model;
+namespace core;
 use database\DataBase;
 //REMEMBER TO TAKE CARE OF THE NAME SPACE
 
@@ -26,10 +26,22 @@ class Model{
   public function insert($fields) {
     if(empty($fields)) return false;
     if(array_key_exists('id', $fields)) unset($fields['id']);
-    $insert = $this->_db()->insert($this->_table, $fields);
-    return $insert;
+    $bool = '';
+    $this->_db()->insert($this->_table, $fields)==true?$bool=true:$bool=false;
+    return $bool;
   }
 
+  public function deleteByUsername($table, $username){
+    // $this->_db()->deleteByUsername($table, $username);
+
+    $sql = "DELETE FROM {$table} WHERE username = {$username}";
+    if(!$this->_db()->query($sql)->error()) {
+      return true;
+    }
+    return false;
+  }
+
+ 
   public function query($sql, $bind=[]) {
     return $this->_db()->query($sql, $bind);
   }
@@ -43,4 +55,29 @@ class Model{
     return $this->_db()->findFirst($this->_table,$conditions);
   }
 
+  public function findByUsernamePassword($username,$password,$params=[]){
+    $conditions = [
+      'conditions' => 'username = ? AND password = ?',
+      'bind' => [$username, $password]
+    ];
+    $conditions = array_merge($conditions,$params);
+    return $this->_db()->findFirst($this->_table,$conditions);
+  }
+
+  public function findByUsernameEmail($username,$email,$params=[]){
+    $conditions = [
+      'conditions' => 'username = ? AND email = ?',
+      'bind' => [$username, $email]
+    ];
+    $conditions = array_merge($conditions,$params);
+    return $this->_db()->findFirst($this->_table,$conditions);
+  }
+
+  public function findByUsername($table, $username) {
+    return $this->_db()->findFirst($table,['conditions'=>"username = ?", 'bind' => [$username]]);
+  } 
+
+  public function findByEmail($table, $email) {
+    return $this->_db()->findFirst($table,['conditions'=>"email = ?", 'bind' => [$email]]);
+  } 
 }

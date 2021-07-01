@@ -5,14 +5,22 @@ use core\Controller;
 use core\Input;
 use API\Model\Users;
 use core\FH;
+use core\http\Middleware\Middleware;
+use core\Model as CoreModel;
+use Response;
+use database\DataBase;
 
 
 class UserController extends Controller{
   private $input;
-  
+  private $model;
+  private $db;
+
   public function __construct($controller, $action) {
     parent::__construct($controller, $action);
     $this->input = new Input();
+    $this->model = new CoreModel('users');
+    $this->db = new DataBase();
   }
 
   //this index action will view the current users profile and or that of any supplied id
@@ -96,6 +104,70 @@ class UserController extends Controller{
   }
 
   public function createAction(){
+    if(!$this->input->isPost()) return $this->jsonResponse([
+      'status'=>'fail',
+      'http'=>401,
+      'message'=>'Only PUT Requests are allowed.',
+      'data'=>[]
+    ]);
+
+    $putData = file_get_contents('php://input');
+    $data = json_decode($putData);
+  
+    //Sanitizing all the input values
+    $sanitized = [];
+    $msg =[];
+    foreach($data as $k => $v){
+      $pureVals = FH::sanitize($v);
+      $sanitized[$k] = $pureVals;
+    }
+   
+    //creating input fields array
+    $fields=[
+      'first_name'=>$sanitized['first_name'],
+      'lastname'=>$sanitized['lastname'],
+      'username'=>$sanitized['username'],
+      'email'=>$sanitized['email'],
+      'pword'=>$sanitized['pword'],
+      'created_at'=>$sanitized['created_at'],
+      'state'=>$sanitized['state'],
+      'addres'=>$sanitized['addres'],
+      'phone'=>$sanitized['phone'], 
+      'acl'=>$sanitized['acl'],
+      'entry_code'=>$sanitized['entry_code'],
+      'ref_code'=>$sanitized['ref_code'],
+      'acc_type'=>$sanitized['acc_type'],
+      'activity'=>$sanitized['activity']
+      ];
+      //check if user already exists in database
+      $userExist = $this->model->findByUsername('users', $sanitized['username']);
+      $emailExist = $this->model->findByEmail('users', $sanitized['email']);
+      $msg = [];
+      if(!empty($userExist) || !empty($emailExist)){
+        (!empty($userExist))?array_push($msg, 'Username already exists. Use another username please.'):null;
+        (!empty($emailExist))?array_push($msg, 'Email already exists. Use another email please.'):null;
+
+        return $this->jsonResponse([
+          "http_status_code"=>401,
+          "status"=>false, 
+          "message"=>$msg,
+          "data"=>[]
+        ]);
+      }
+      //Create new account in the database
+      if($this->model->insert($fields)) return $this->jsonResponse([
+        "http_status_code"=>200,
+        "status"=>true, 
+        "message"=>'',
+        "data"=>[]
+      ]);
+
+      return $this->jsonResponse([
+        "http_status_code"=>500,
+        "status"=>false, 
+        "message"=>"Something went wrong. We are working on it.",
+        "data"=>[]
+      ]);
 
   }
 
@@ -107,25 +179,78 @@ class UserController extends Controller{
       'message'=>'Only POST Requests are allowed.',
       'data'=>[]
     ]);
+    $midware = new Middleware();
+    $token = $midware->token();
     //inputs will be form data 
     $request = $_REQUEST;
     $username = FH::sanitize($request['username']);
     $password  = FH::sanitize($request['password']);
+    $user_agent = trim($request['user_agent']);
+
+    //checking if there is a user with the given username and password
+
+    $checkUser = $this->model->findByUsernamePassword($username, $password);
+    if(empty($checkUser)) return $this->jsonResponse([
+      'http_status_code'=>401,
+      "status"=>false,
+      "message"=>"Username or password incorrect.",
+      'data'=>[]
+    ]);
+
+    //preparing fields
     $fields = [
-      ""=>"",
-      ""=>"",
-      ""=>"",
-      ""=>"",
-      ""=>"",
-      ""=>""
+      "username"=>$username,
+      "access_token"=>$token,
+      "user_agent"=>$user_agent,
+      "token_exp"=>604800,
     ];
-    var_dump($request['username']);
-
-
+    //Delete the users any existing session.
+    $this->model->deleteByUsername('session_tb', $username);
+    //create a new session
+    $status = '';
+   $this->model->insert($fields)===true?$status=true:$status=false;
+   if($status)return $this->jsonResponse([
+     'http_status_code'=>200,
+     "status"=>true,
+     "datat"=>[
+        "username"=>$username,
+        "access_token"=>$token,
+        "token_exp"=>$fields['token_exp']
+     ]
+   ]); 
+   
+   if(!$status)return $this->jsonResponse([
+    'http_status_code'=>401,
+    "status"=>false,
+    "data"=>[]
+  ]); 
 
   }
 
-  public function logoutAction(){
+  public function logoutAction($username){
+    if(!$this->input->isGet()) return $this->jsonResponse([
+      'status'=>'fail',
+      'http'=>401,
+      'message'=>'Only GET Requests are allowed.',
+      'data'=>[]
+    ]);
+    
+    //checking if the user is logged in 
+    $checkLogged = $this->model->findByUsername('users', $username);
+    if(empty($checkLogged))return $this->jsonResponse([
+      'http_status_code'=>401,
+      "status"=>false,
+      "message"=>"You are logged out",
+      "data"=>[]
+    ]);
 
+    $logOut = $this->model->deleteByUsername('users', $username);
+
+    if($logOut) return $this->jsonResponse([
+      'http_status_code'=>200,
+      "status"=>true,
+      "message"=>"You have successfully logged out.",
+      "data"=>[]
+    ]);
   }
 }

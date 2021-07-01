@@ -1,7 +1,7 @@
 <?php
 namespace model;
 use database\DataBase;
-use model\Model;
+use core\Model;
 // require_once 'Model.php';
 class User{
   private $_userID, $_firstname, $_lastname,$_username,$_email, $_password,$_created_at,$_state, $_activity
@@ -242,7 +242,7 @@ class User{
   }
 
   
-  public function editUser(int $userID,$fields, $admin=null){
+  public function editUser(int $userID,array $fields, $admin=null){
     //if admin is the one editing the user, do this
     if($admin!==null){
       //register under admin history

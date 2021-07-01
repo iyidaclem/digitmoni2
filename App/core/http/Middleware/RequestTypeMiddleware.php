@@ -1,6 +1,6 @@
 <?php 
 namespace core\http\Middleware;
 
-class RouteAclMiddleware{
+class RequestTypeMiddleware{
   
 }

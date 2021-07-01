@@ -185,6 +185,9 @@ class DataBase{
     return $this->findFirst(['conditions'=>"id = ?", 'bind' => [$id]]);
   }
 
+  public function findByUsername($table, $username) {
+    return $this->findFirst($table,['conditions'=>"username = ?", 'bind' => [$username]]);
+  } 
   
 
 }
