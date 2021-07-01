@@ -40,8 +40,8 @@ class FundController extends Controller{
     ]);
   }
 
-  public function fundAction($amount){
-
+  public function fundAction($reference){
+    $amount = $_REQUEST['amount'];
     $loggedInUser = $this->middleware->loggedUser();
     $fields = [
       "balance"=>$amount,
@@ -52,10 +52,17 @@ class FundController extends Controller{
 
   public function withdrawAction($amount){
     $loggedInUser = $this->middleware->loggedUser();
+    /*check if the user have up to the amount and if not send decline response*/
+
+    //send transfer request to paystack. 
+
+    //if it fails, send fail response
+
+    //if it succeeds, updtate the database
     $fields = [
       "balance"=>$amount,
     ];
-    $fundAccount = $this->model->update($this->model->_table, $fields);
+    $withrwal = $this->model->update($this->model->_table, $fields);
   }
 
 

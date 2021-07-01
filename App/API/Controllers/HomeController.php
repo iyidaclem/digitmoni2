@@ -26,4 +26,8 @@ class HomeController extends Controller{
     var_dump($request);
     echo "digitmoni app home";
   }
+
+  public function referenceAction(){
+    
+  }
 }
