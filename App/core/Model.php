@@ -57,7 +57,7 @@ class Model{
 
   public function findByUsernamePassword($username,$password,$params=[]){
     $conditions = [
-      'conditions' => 'username = ? AND password = ?',
+      'conditions' => 'username = ? AND pword = ?',
       'bind' => [$username, $password]
     ];
     $conditions = array_merge($conditions,$params);

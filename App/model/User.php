@@ -2,6 +2,8 @@
 namespace model;
 use database\DataBase;
 use core\Model;
+use \PDO;
+use \PDOException;
 // require_once 'Model.php';
 class User{
   private $_userID, $_firstname, $_lastname,$_username,$_email, $_password,$_created_at,$_state, $_activity
@@ -161,6 +163,18 @@ class User{
   public function getSuspensionTime(){
     return $this->_suspendedAt;
   }
+
+  // public function logoutByUsername($username,$table){
+  //   $db = DataBase::getInstance();
+  //   $query = PDO::prepare("DELETE from $table where username =:username");
+  //   $query->bindParam('username', $username, PDO::PARAM_STR);
+  //   $query->execute();
+  //   $rowcount = $query->rowCount();
+  //   if($rowcount ==0){
+  //     return false;
+  //   }
+  //   return true;
+  // }
 
   public function setUsers($firstname, $lastname, $username, $email, $password, $created_at, $state, $address, $acl, $phone, $entryCode, $refcode, $accType){
     //print($created_at);

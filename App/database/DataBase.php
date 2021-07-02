@@ -161,6 +161,16 @@ class DataBase{
     return false;
   }
 
+  public function deleteByUser($table, $username) {
+    $sql = "DELETE FROM {$table} WHERE username = {$username}";
+    if(!$this->query($sql)->error()) {
+      return true;
+    }
+    return false;
+  }
+
+
+
   public function first() {
     return (!empty($this->_result))? $this->_result[0] : [];
   }

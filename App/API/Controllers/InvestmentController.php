@@ -20,4 +20,16 @@ class InvestmentController extends Controller{
     $this->model = new CoreModel('users');
     $this->db = new DataBase();
   }
+
+  public function indexAction(){
+
+  }
+
+  public function viewpackageAction($packagename){
+
+  }
+
+  public function investAction(){
+         
+  }
 }

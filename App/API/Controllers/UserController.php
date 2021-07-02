@@ -26,16 +26,15 @@ class UserController extends Controller{
   }
 
   //this index action will view the current users profile and or that of any supplied id
-  public function indexAction($userID=null){
-    if(!$this->input->isPost()) return $this->jsonResponse([
+  public function profileAction($username=null){
+    if(!$this->input->isGet()) return $this->jsonResponse([
       'status'=>'fail',
       'http'=>401,
-      'message'=>'Only Post Requests are allowed.',
+      'message'=>'Only GET Requests are allowed.',
       'data'=>[]
     ]);
-    $userID==null?$_userID = Users::currentUser():$_userID=null;
-    $user = new Users();
-    $details = $user->viewUser($_userID);
+    //$userID==null?$_userID = Users::currentUser():$_userID=null;
+    $details = $this->model->findByUsername('users', $username);
 
     return $this->jsonResponse([
       'status'=>'success',
@@ -141,6 +140,7 @@ class UserController extends Controller{
       'acc_type'=>$sanitized['acc_type'],
       'activity'=>$sanitized['activity']
       ];
+    
       //check if user already exists in database
       $userExist = $this->model->findByUsername('users', $sanitized['username']);
       $emailExist = $this->model->findByEmail('users', $sanitized['email']);
@@ -156,13 +156,15 @@ class UserController extends Controller{
           "data"=>[]
         ]);
       }
+      //var_dump($fields);
+      //die();
       //Create new account in the database and if it is successful, iniatialize it in fund_user table
       if($this->model->insert($fields)) $this->user->initializeAccount($sanitized['username']);
       //Now send response 
       return $this->jsonResponse([
         "http_status_code"=>200,
         "status"=>true, 
-        "message"=>'',
+        "message"=>'Your account has been created',
         "data"=>[]
       ]);
 
@@ -174,6 +176,12 @@ class UserController extends Controller{
       ]);
 
   }
+
+/*
+===========================================================================
+
+===========================================================================
+*/ 
 
   public function loginAction(){
     
@@ -190,10 +198,11 @@ class UserController extends Controller{
     $username = FH::sanitize($request['username']);
     $password  = FH::sanitize($request['password']);
     $user_agent = trim($request['user_agent']);
-
+    
     //checking if there is a user with the given username and password
 
     $checkUser = $this->model->findByUsernamePassword($username, $password);
+    
     if(empty($checkUser)) return $this->jsonResponse([
       'http_status_code'=>401,
       "status"=>false,
@@ -208,11 +217,15 @@ class UserController extends Controller{
       "user_agent"=>$user_agent,
       "token_exp"=>604800,
     ];
-    //Delete the users any existing session.
-    $this->model->deleteByUsername('session_tb', $username);
+    $model= new CoreModel('session_tb');
+    $userLogged = $model->findByUsername('session_tb', $username);
+    if($userLogged){
+      $this->db->delete('session_tb',$userLogged->id);
+    }
+    
     //create a new session
     $status = '';
-   $this->model->insert($fields)===true?$status=true:$status=false;
+   $model->insert($fields)===true?$status=true:$status=false;
    if($status)return $this->jsonResponse([
      'http_status_code'=>200,
      "status"=>true,
@@ -231,6 +244,13 @@ class UserController extends Controller{
 
   }
 
+/*
+===========================================================================
+
+===========================================================================
+*/ 
+
+
   public function logoutAction($username){
     if(!$this->input->isGet()) return $this->jsonResponse([
       'status'=>'fail',
@@ -240,15 +260,16 @@ class UserController extends Controller{
     ]);
     
     //checking if the user is logged in 
-    $checkLogged = $this->model->findByUsername('users', $username);
-    if(empty($checkLogged))return $this->jsonResponse([
+    $checkLogged = $this->model->findByUsername('session_tb', $username);
+   // var_dump($checkLogged);die();
+    if(!$checkLogged)return $this->jsonResponse([
       'http_status_code'=>401,
       "status"=>false,
       "message"=>"You are logged out",
       "data"=>[]
     ]);
-
-    $logOut = $this->model->deleteByUsername('users', $username);
+    $db = new DataBase();
+    $logOut = $db->delete('session_tb', $checkLogged->id);
 
     if($logOut) return $this->jsonResponse([
       'http_status_code'=>200,
