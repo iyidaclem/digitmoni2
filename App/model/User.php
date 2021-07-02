@@ -164,17 +164,6 @@ class User{
     return $this->_suspendedAt;
   }
 
-  // public function logoutByUsername($username,$table){
-  //   $db = DataBase::getInstance();
-  //   $query = PDO::prepare("DELETE from $table where username =:username");
-  //   $query->bindParam('username', $username, PDO::PARAM_STR);
-  //   $query->execute();
-  //   $rowcount = $query->rowCount();
-  //   if($rowcount ==0){
-  //     return false;
-  //   }
-  //   return true;
-  // }
 
   public function setUsers($firstname, $lastname, $username, $email, $password, $created_at, $state, $address, $acl, $phone, $entryCode, $refcode, $accType){
     //print($created_at);

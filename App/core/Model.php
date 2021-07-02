@@ -76,6 +76,9 @@ class Model{
   public function findByUsername($table, $username) {
     return $this->_db()->findFirst($table,['conditions'=>"username = ?", 'bind' => [$username]]);
   } 
+  public function findByToken($table, $token) {
+    return $this->_db()->findFirst($table,['conditions'=>"access_token = ?", 'bind' => [$token]]);
+  } 
 
   public function findByEmail($table, $email) {
     return $this->_db()->findFirst($table,['conditions'=>"email = ?", 'bind' => [$email]]);

@@ -24,11 +24,12 @@ class FundController extends Controller{
     $this->middleware = new Middleware();
   }
 
-  public function indexAction(){
+  public function checkbalAction(){
 
-    $loggedInUser = $this->middleware->loggedUser();
+   // $loggedInUser = $this->middleware->loggedUser();
+   $loggedInUser = 'Vince';
     $fund = $this->model->findByUsername($this->model->_table, $loggedInUser);
-    $balance = $fund['balance'];
+    $balance = $fund->balance;
     return $this->jsonResponse([
       'http_status_code'=>200,
       'status'=>true,

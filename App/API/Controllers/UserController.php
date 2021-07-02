@@ -119,10 +119,12 @@ class UserController extends Controller{
     $sanitized = [];
     $msg =[];
     foreach($data as $k => $v){
-      $pureVals = FH::sanitize($v);
+      if($k!='acl'){
+        $pureVals = FH::sanitize($v);
       $sanitized[$k] = $pureVals;
+      }
     }
-   
+    $acl = serialize($data->acl);
     //creating input fields array
     $fields=[
       'first_name'=>$sanitized['first_name'],
@@ -134,7 +136,7 @@ class UserController extends Controller{
       'state'=>$sanitized['state'],
       'addres'=>$sanitized['addres'],
       'phone'=>$sanitized['phone'], 
-      'acl'=>$sanitized['acl'],
+      'acl'=>$acl,
       'entry_code'=>$sanitized['entry_code'],
       'ref_code'=>$sanitized['ref_code'],
       'acc_type'=>$sanitized['acc_type'],

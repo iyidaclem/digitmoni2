@@ -1,4 +1,7 @@
-<?php class Response{
+<?php 
+namespace core;
+
+class Response{
   private $_success;
   private $_messages = array();
   private $_data;

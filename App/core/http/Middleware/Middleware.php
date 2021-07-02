@@ -1,13 +1,35 @@
 <?php 
 namespace core\http\Middleware;
+use core\Model;
+use core\Response;
 
 class Middleware{
   private $token="kjfakjakakjklafjlakla;fklakfal";
   private $char = '0123456789*&%$#@!~?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  private  $response;
+  private $incoming_token;
 
-  public function authToken(){
-    return $this->token;
+  public function __construct(){
+    $this->response = new Response();
   }
+
+  public function getACL_Username($token){
+    $model = new Model('session_tb');
+    $sessionData = $model->findByToken('session_tb', $token);
+    if(!$sessionData){
+      $this->response->SendResponse(401, false, 'You need to log in first.');
+    }
+    //Now use the username in session data retrivedd to get acl from user table
+    $userdata = $model->findByUsername('users', $sessionData->username);
+    $userdata->acl;
+
+    $aclArry = unserialize($userdata->acl);
+    $session = [];
+    $session['user_acl'] = $aclArry;
+    $session['loggedUser'] = $sessionData->username;
+    return $session;
+  }
+
 
   public function token(){
     return $this->generateRandomString();
@@ -22,6 +44,6 @@ class Middleware{
   }
 
   public function loggedUser(){
-    return true;
+   // $this->getACL_Username();
   }
 }
