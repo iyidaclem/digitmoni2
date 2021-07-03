@@ -46,6 +46,13 @@ class Model{
     return $this->_db()->query($sql, $bind);
   }
 
+  public function find($params = []) {
+   // $params = $this->_softDeleteParams($params);
+    $resultsQuery = $this->_db->find($this->_table, $params,get_class($this));
+    if(!$resultsQuery) return [];
+    return $resultsQuery;
+  }
+
   public function findByUserIdAndTargetID($username,$targetID,$params=[]){
     $conditions = [
       'conditions' => 'username = ? AND id = ?',

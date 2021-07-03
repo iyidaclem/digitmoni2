@@ -94,9 +94,14 @@ This nex action will return a list of invest packages we offer
     return $this->response->SendResponse(
       401, false, ACL_MSG
     );
-
+    
     //Now query the database and fetch all packages and return;
-    $allPackage = $this->model->find();
+    $this->table = 'investments';
+    $allPackage = $this->model->find([
+      'conditions' => 'state = ?','bind' => ['running']]);
+    //sending back response
+      return $this->response->SendResponse(200, true, '', true, $allPackage);
+
   }
 /*
 ===================================================
