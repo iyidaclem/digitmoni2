@@ -12,6 +12,8 @@ use core\Model as CoreModel;
 use core\Response;
 use database\DataBase;
 
+use function PHPUnit\Framework\returnSelf;
+
 class InvAdminControl extends Controller{
   private $input;
   private $model;
@@ -66,9 +68,13 @@ class InvAdminControl extends Controller{
     if(!$this->model->insert($fields)) return $this->response->SendResponse(
       400, false, 'Failed to create a damn investment package.'
     );
+    return $this->response->SendResponse(
+      200, true, 'Investment package successfully created.');
   }
 /*
 ===================================================
+This next action when called suspends the investment package so 
+users can no longer enrol for it
 */ 
 
   public function suspendAction(){
@@ -76,9 +82,21 @@ class InvAdminControl extends Controller{
   }
 /*
 ===================================================
+This nex action will return a list of invest packages we offer
 */ 
-  public function seeAction(){
+  public function allAction(){
+    //making sure it is a get request 
+    if(!$this->input->isGet()) return $this->response->SendResponse(
+      401, false, GET_MSG
+    );
+    //making sure the action is being performed by Inv Admin or superAdmin
+    if($this->middleware->isInvAdmin() && !$this->middleware->isSuperAdmin())
+    return $this->response->SendResponse(
+      401, false, ACL_MSG
+    );
 
+    //Now query the database and fetch all packages and return;
+    $allPackage = $this->model->find();
   }
 /*
 ===================================================
