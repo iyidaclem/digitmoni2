@@ -22,12 +22,13 @@ class Middleware{
     //Now use the username in session data retrivedd to get acl from user table
     $userdata = $model->findByUsername('users', $sessionData->username);
     $userdata->acl;
-
+    // print($sessionData->username);die();
     $aclArry = unserialize($userdata->acl);
     $session = [];
     $session['user_acl'] = $aclArry;
-    $session['loggedUser'] = $sessionData->username;
-    return $session;
+    $session['loggedUser'] = $userdata->username;
+    //print($userdata->username);die;
+     var_dump($session);die();
   }
 
 

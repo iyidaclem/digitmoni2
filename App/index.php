@@ -2,6 +2,8 @@
 
 use core\http\Middleware\Middleware;
 use core\Router;
+use core\http\Middleware\IndexMiddleware;
+use test\MiddlewareTest;
 
 define('ds', DIRECTORY_SEPARATOR);
 define('ROOT', dirname(__FILE__));
@@ -23,8 +25,17 @@ spl_autoload_register('autoload');
 
 $url = isset($_SERVER['PATH_INFO'])? explode('/', ltrim($_SERVER['PATH_INFO'], '/')):[];
 
-$middleware = new Middleware();
-$aclUsername = $middleware->getACL_Username($_SERVER['HTTP_AUTHORIZATION']);
-var_dump($aclUsername['user_acl']);
-die();
+// $test = new MiddlewareTest();
+// die;
+
+$middleware = new IndexMiddleware();
+if(array_key_exists('HTTP_AUTHORIZATION',$_SERVER)){
+  $aclUsername = $middleware->getACL_Username($_SERVER['HTTP_AUTHORIZATION']);
+  var_dump($middleware->sessionData);
+  $middleware->loggedUser();
+  die();
+}
+//DEFINE ROUTES OR CONTROLLERS THAT DOESNT NEED AUTHENTICATION TOKEN
+// var_dump($url);die();
+
 Router::route($url);

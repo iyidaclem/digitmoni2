@@ -1,8 +1,11 @@
 <?php 
 namespace core\http\Middleware;
 use core\Model;
+use core\Response;
 
 class IndexMiddleware{
+  private $response;
+ 
   private $memberRoutes=[
     ROOT 
   ];
@@ -31,11 +34,28 @@ class IndexMiddleware{
 
   private $loggedinUser;
 
-  public function __construct($server_auth, $member, $partner, $subPartner, $invAdmin, $uAdmin, $superAdmin, $url){
-    $this->setRoutes($member, $partner, $subPartner, $invAdmin, $uAdmin, $superAdmin);
-    $usernameAndACL= $this->getACL_Username($server_auth);  
-    $this->acl = $usernameAndACL['user_acl'];
-    $this->loggedinUser = $usernameAndACL['loggedUser'];
+  private $superAdmin;
+
+  private $partner;
+
+  private $invAdmin;
+
+  private $uAdmin;
+
+  public $sessionData;
+
+  public function __construct(){
+    //setting the routes to varous acls
+    //$this->setRoutes($member, $partner, $subPartner, $invAdmin, $uAdmin, $superAdmin);
+    //getting username and acl
+    //$usernameAndACL= $this->getACL_Username($this->server_auth);  
+    //getting the acl array
+    //$this->acl = $usernameAndACL['user_acl'];
+    //getting the logged in username
+    //$this->loggedinUser = $usernameAndACL['loggedUser'];
+
+    $this->response = new Response();
+    
   }
 
   public function getACL_Username($token){
@@ -52,7 +72,8 @@ class IndexMiddleware{
     $session = [];
     $session['user_acl'] = $aclArry;
     $session['loggedUser'] = $sessionData->username;
-    return $session;
+    //return $session;
+    $this->sessionData = $session;
   }
 
   public function setRoutes($member, $partner, $subPartner, $invAdmin, $uAdmin, $superAdmin){
@@ -64,17 +85,40 @@ class IndexMiddleware{
     $this->subPartnerRoutes = $subPartner;
   }
 
-  public function memberRoutes(array $PermittedRoutes, array $incomingRoute){
-    $this->memberRoutes = $PermittedRoutes;
-
-  }
 
   public function loggedUser(){
-    return $this->loggedinUser;
+    //return $this->sessionData['loggedUser'];
+    return $this->sessionData['loggedUser'];
    }
 
   public function ACLRoutes(){
 
   }
+
+  public function isSuperAdmin(){
+    // var_dump($this->sessionData['user_acl']);
+    if(!in_array('superadmin', $this->sessionData['user_acl'])) return false;
+    return true;
+  }
+
+  public function isPartner(){
+    // var_dump($this->sessionData['user_acl']);
+    if(!in_array('partner', $this->sessionData['user_acl'])) return false;
+    return true;
+  }
+
+
+  public function isUAdmin(){
+    if(!in_array('uAdmin', $this->sessionData['user_acl'])) return false;
+    return true;
+  }
+
+  public function isInvAdmin(){
+    var_dump($this->sessionData['user_acl']);
+    if(!in_array('invAdmin', $this->sessionData['user_acl'])) return false;
+    return true;
+  }
+
+
 
 }
