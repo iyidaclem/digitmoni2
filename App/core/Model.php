@@ -48,7 +48,7 @@ class Model{
 
   public function find($params = []) {
    // $params = $this->_softDeleteParams($params);
-    $resultsQuery = $this->_db->find($this->_table, $params,get_class($this));
+    $resultsQuery = $this->_db()->find($this->_table, $params);
     if(!$resultsQuery) return [];
     return $resultsQuery;
   }
@@ -60,6 +60,12 @@ class Model{
     ];
     $conditions = array_merge($conditions,$params);
     return $this->_db()->findFirst($this->_table,$conditions);
+  }
+
+  public function findFirst($params = []) {
+   // $params = $this->_softDeleteParams($params);
+    $resultQuery = $this->_db()->findFirst($this->_table, $params);
+    return $resultQuery;
   }
 
   public function findByUsernamePassword($username,$password,$params=[]){

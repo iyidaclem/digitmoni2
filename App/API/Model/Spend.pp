@@ -4,6 +4,6 @@ use database\DataBase;
 use core\Model;
 
 
-class Login extends Model{
+class Spend extends Model{
   
 }

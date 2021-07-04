@@ -11,6 +11,7 @@ use core\Model as CoreModel;
 //use core\Response;
 use core\Response;
 use database\DataBase;
+use core\logger\logger;
 
 use function PHPUnit\Framework\returnSelf;
 
@@ -77,8 +78,8 @@ This next action when called suspends the investment package so
 users can no longer enrol for it
 */ 
 
-  public function suspendAction(){
-
+  public function suspendAction($packageName){
+    
   }
 /*
 ===================================================
@@ -101,7 +102,6 @@ This nex action will return a list of invest packages we offer
       'conditions' => 'state = ?','bind' => ['running']]);
     //sending back response
       return $this->response->SendResponse(200, true, '', true, $allPackage);
-
   }
 /*
 ===================================================
@@ -110,7 +110,23 @@ This nex action will return a list of invest packages we offer
 
   }
 
-  public function cancelAction(){
+  public function cancelAction($packageID,$packageName){
+    //making sure it is a GET request 
+    if(!$this->input->isGet()) return $this->response->SendResponse(
+      401, false, GET_MSG
+    );
+    //making sure the user is either the supeer admin or the investment admin
+    if(!$this->middleware->isSuperAdmin() && !$this->middleware->isInvAdmin()) 
+    return $this->response->SendResponse(400, false, ACL_MSG);
+
+    //now query the database with the package name provided
+    $this->table = 'investments';
+    $package = $this->model->findFirst([
+      'conditions' => 'id = ? AND option_name = ?',
+      'bind' => [$packageID, $packageName]
+    ]);
+
+    //here set package state to disable.
 
   }
 /*
