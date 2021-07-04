@@ -27,3 +27,4 @@ define('ACCESS_RESTRICTED', 'Restricted'); //controller name for the restricted 
 define('GET_MSG', 'Only GET requests are allowed.');
 define('ACL_MSG', 'Page not found! Go back to previous page.');
 define('POST_MSG', 'Only POST requests are allowed.');
+define('NOT_FOUND_MSG', '');
