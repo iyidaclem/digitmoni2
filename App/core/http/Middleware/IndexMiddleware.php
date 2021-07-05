@@ -42,7 +42,7 @@ class IndexMiddleware{
 
   private $uAdmin;
 
-  public $sessionData;
+  private $sessionData;
 
   public function __construct(){
     //setting the routes to varous acls
@@ -72,7 +72,9 @@ class IndexMiddleware{
     $session = [];
     $session['user_acl'] = $aclArry;
     $session['loggedUser'] = $sessionData->username;
+    $session['loggedUserID'] = $userdata->id;
     //return $session;
+    //var_dump($session);die();
     $this->sessionData = $session;
   }
 
@@ -85,14 +87,26 @@ class IndexMiddleware{
     $this->subPartnerRoutes = $subPartner;
   }
 
-
+  public function dump(){
+    $session = $this->sessionData;
+    var_dump($session);die();
+  }
   public function loggedUser(){
     //return $this->sessionData['loggedUser'];
     return $this->sessionData['loggedUser'];
-   }
+  }
+
+  public function loggedUserID(){
+    return $this->sessionData['loggedUserID'];
+  }
 
   public function ACLRoutes(){
 
+  }
+
+  public function isUser(){
+    if(!in_array('member', $this->sessionData['user_acl'])) return false;
+    return true;
   }
 
   public function isSuperAdmin(){

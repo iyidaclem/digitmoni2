@@ -5,17 +5,17 @@ use core\Controller;
 use core\Input;
 use API\Model\Users;
 use core\FH;
+use core\http\Middleware\IndexMiddleware;
 use core\http\Middleware\Middleware;
 use core\Model as CoreModel;
-use Response;
+//use Response;
 use database\DataBase;
-
+use core\Response;
+use test\MiddlewareTest;
 
 class UserController extends Controller{
-  private $input;
-  private $model;
-  private $db;
-  private $user;
+  private $input, $model, $db, $user, $response, $middleware, $indexMiddleware;
+
 
   public function __construct($controller, $action) {
     parent::__construct($controller, $action);
@@ -23,36 +23,43 @@ class UserController extends Controller{
     $this->model = new CoreModel('users');
     $this->db = new DataBase();
     $this->user = new Users();
+    $this->response = new Response();
+    $this->middleware = new Middleware();
+    $this->indexMiddleware = $GLOBALS['indexMiddleware'];
+
   }
 
   //this index action will view the current users profile and or that of any supplied id
   public function profileAction($username=null){
-    if(!$this->input->isGet()) return $this->jsonResponse([
-      'status'=>'fail',
-      'http'=>401,
-      'message'=>'Only GET Requests are allowed.',
-      'data'=>[]
-    ]);
-    //$userID==null?$_userID = Users::currentUser():$_userID=null;
-    $details = $this->model->findByUsername('users', $username);
-
-    return $this->jsonResponse([
-      'status'=>'success',
-      'http'=>200,
-      'message'=>'',
-      'data'=>$details
-    ]);
+    if(!$this->input->isGet()) return $this->response->SendResponse(
+      400, false, POST_MSG
+    );
+   
+    if(!$this->indexMiddleware->isUser())return $this->response->SendResponse(
+      400, false, ACL_MSG
+    );
+    $username==null?$_username = $this->indexMiddleware->loggedUser():$_username=$username;
+    
+    //var_dump($_username); die();
+    $fetchProfile = $this->model->findByUsername('users', $_username); 
+    
+    if(!$fetchProfile)return $this->response->SendResponse(
+      404, false, 'There is a problem fetching your profile data.'
+    );
+    $acl = unserialize($fetchProfile->acl); 
+    $fetchProfile->acl = $acl;
+    return $this->response->SendResponse(200, false, null, true, $fetchProfile);
   }
 
-
-
   public function updateAction($targetID=null){
-    if(!$this->input->isPut()) return $this->jsonResponse([
-      'status'=>'fail',
-      'http'=>401,
-      'message'=>'Only PUT Requests are allowed.',
-      'data'=>[]
-    ]);
+    if(!$this->input->isPut()) return $this->response->SendResponse(
+      401, false, 'Wrong request method.'
+    );
+    
+    //$this->indexMiddleware->dump();
+    if(!$this->indexMiddleware->isUser()) return $this->response->SendResponse(
+      401, false, ACL_MSG
+    );
 
     //handling the request data
     $putData = file_get_contents('php://input');
@@ -62,10 +69,12 @@ class UserController extends Controller{
     $sanitized = [];
     $msg =[];
     foreach($data as $k => $v){
-      $pureVals = FH::sanitize($v);
+      if($k!='acl'){
+        $pureVals = FH::sanitize($v);
       $sanitized[$k] = $pureVals;
+      }
     }
-   
+    $acl = serialize($data->acl);
     //creating input fields array
     $fields=[
       'first_name'=>$sanitized['first_name'],
@@ -77,15 +86,16 @@ class UserController extends Controller{
       'state'=>$sanitized['state'],
       'addres'=>$sanitized['addres'],
       'phone'=>$sanitized['phone'], 
-      'acl'=>$sanitized['acl'],
+      'acl'=>$acl,
       'entry_code'=>$sanitized['entry_code'],
       'ref_code'=>$sanitized['ref_code'],
       'acc_type'=>$sanitized['acc_type'],
       'activity'=>$sanitized['activity']
       ];
-    
-    $user = new Users;
-    If(!$user->editUser($targetID, $fields)){
+    $loggedUserID = $this->indexMiddleware->loggedUserID();
+      //var_dump($loggedUserID);die();
+    //$user = new Users;
+    If(!$this->model->update($loggedUserID, $fields)){
       return $this->jsonResponse([
         'http'=>500,
         'status'=>'false',
@@ -93,7 +103,12 @@ class UserController extends Controller{
       ]);
     };
 
-    $details = $user->viewUser($targetID);
+    $details = $this->model->findFirst([
+      'conditions' => 'id = ?','bind' => [$loggedUserID]]);
+    $acl = unserialize($details->acl);
+    $details->acl = $acl;
+
+    //LOG ACTION
 
     return $this->jsonResponse([
       'http'=>200,
@@ -109,12 +124,9 @@ class UserController extends Controller{
   */ 
 
   public function createAction(){
-    if(!$this->input->isPost()) return $this->jsonResponse([
-      'status'=>'fail',
-      'http'=>401,
-      'message'=>'Only PUT Requests are allowed.',
-      'data'=>[]
-    ]);
+    if(!$this->input->isPost()) $this->response->SendResponse(
+      401, false, POST_MSG
+    );
 
     $putData = file_get_contents('php://input');
     $data = json_decode($putData);
@@ -162,10 +174,13 @@ class UserController extends Controller{
           "data"=>[]
         ]);
       }
-      //var_dump($fields);
-      //die();
+
       //Create new account in the database and if it is successful, iniatialize it in fund_user table
       if($this->model->insert($fields)) $this->user->initializeAccount($sanitized['username']);
+      
+      //PROCESS REF CODE
+
+
       //Now send response 
       return $this->jsonResponse([
         "http_status_code"=>200,

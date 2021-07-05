@@ -1,5 +1,7 @@
 <?php 
 use core\Input;
+use core\Response;
+$response = new Response();
 
 function Unique_Id_Gen($for, $digit = null){
   is_null($digit) == false? $length = $digit: $length = 10;

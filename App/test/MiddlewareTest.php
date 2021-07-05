@@ -4,13 +4,12 @@ use core\http\Middleware;
 use core\http\Middleware\IndexMiddleware;
 
 class MiddlewareTest{
-  public function __construct()
+  public function __construct($server)
   {
     $indexMiddleware = new IndexMiddleware();
 
-    $indexMiddleware->getACL_Username('8NEEkw@fmgiAaYuk$MbNA5u2oYOdv@A2YIH2Wdar@b57d7kEMv');
+    $indexMiddleware->getACL_Username($server);
 
-     print($indexMiddleware->isPartner());
   }
 }
 

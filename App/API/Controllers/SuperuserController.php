@@ -39,6 +39,7 @@ class Superuser extends Controller{
     );
     //query the database to get detailse of the incoming admin using the username
     $incomingAdminData = $this->model->findByUsername('users', $username);
+    print($incomingAdminData); die();
     //get his ACL as array 
     $incomingAdminACL = unserialize($incomingAdminData->acl);
     //push new access level into the array and serialize again 

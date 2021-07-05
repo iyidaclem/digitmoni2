@@ -5,6 +5,7 @@ use core\Router;
 use core\http\Middleware\IndexMiddleware;
 use test\MiddlewareTest;
 
+
 define('ds', DIRECTORY_SEPARATOR);
 define('ROOT', dirname(__FILE__));
 
@@ -25,12 +26,15 @@ spl_autoload_register('autoload');
 
 $url = isset($_SERVER['PATH_INFO'])? explode('/', ltrim($_SERVER['PATH_INFO'], '/')):[];
 
-// $test = new MiddlewareTest();
+// $test = new MiddlewareTest($_SERVER['HTTP_AUTHORIZATION']);
 // die;
+class index{
 
-$middleware = new IndexMiddleware();
+}
+$GLOBALS['indexMiddleware'] =$middleware = new IndexMiddleware();
 if(array_key_exists('HTTP_AUTHORIZATION',$_SERVER)){
   $aclUsername = $middleware->getACL_Username($_SERVER['HTTP_AUTHORIZATION']);
+  //$GLOBALS['indexMiddleware']->dump();
 }
 //DEFINE ROUTES OR CONTROLLERS THAT DOESNT NEED AUTHENTICATION TOKEN
 // var_dump($url);die();
