@@ -12,11 +12,12 @@ use core\Model as CoreModel;
 use core\Response;
 use database\DataBase;
 
-class Superuser extends Controller{
+class AdminController extends Controller{
   private $input;
   private $model;
   private $db;
   private $middleware;
+  private $indexMiddleware;
   private $response;
 
   public function __construct($controller, $action) {
@@ -24,7 +25,7 @@ class Superuser extends Controller{
     $this->input = new Input();
     $this->model = new CoreModel('users');
     $this->db = new DataBase();
-    $this->middleware = new IndexMiddleware();
+    $this->indexMiddleware = $GLOBALS['indexMiddleware'];
     $this->response = new Response();
   }
 
@@ -34,25 +35,30 @@ class Superuser extends Controller{
       401,false, 'Only POST requests are allowed'
     );
     //making sure that the user is the super admin
-    if(!$this->middleware->isSuperAdmin()) return $this->response->SendResponse(
+    if(!$this->indexMiddleware->isSuperAdmin()) return $this->response->SendResponse(
       401,false, 'You cant perform this action.'
     );
     //query the database to get detailse of the incoming admin using the username
     $incomingAdminData = $this->model->findByUsername('users', $username);
-    print($incomingAdminData); die();
     //get his ACL as array 
     $incomingAdminACL = unserialize($incomingAdminData->acl);
-    //push new access level into the array and serialize again 
-    $updatedACL = array_push($incomingAdminACL, $role);
-    $updatedACL = serialize($updatedACL);
-    //update 
+
+    array_push($incomingAdminACL, $role);;
+   
+    $updatedACL = serialize($incomingAdminACL);
+    
+    // //update 
     $fields=[
-      'acl'=>$updatedACL
+     'acl'=>$updatedACL
     ];
-    if(!$this->model->update($incomingAdminData->id, $fields)) 
+    $appoint = $this->model->update($incomingAdminData->id, $fields);
+    if(!$appoint) 
     return $this->response->SendResponse(400, false, "Failed to make this dude an admin for some reasons.");
-    //returning success message
-    return $this->response->SendResponse(200, false, `{$incomingAdminData->username} is now ${$role}`);
+    //returning success message with new admin detail
+    $appointed = $this->model->findByUsername('users', $username);
+    $acl = unserialize($appointed->acl);
+    $appointed->acl =$acl;
+    return $this->response->SendResponse(200, false, 'New admin appointed.',false,$appointed);
 
   }
 
@@ -65,16 +71,17 @@ class Superuser extends Controller{
       401,false, 'Only POST requests are allowed'
     );
     //making sure that the user is the super admin
-    if(!$this->middleware->isSuperAdmin()) return $this->response->SendResponse(
+    if(!$this->indexMiddleware->isSuperAdmin()) return $this->response->SendResponse(
       401,false, 'You cant perform this action.'
     );
     //query the database to fetch the details of the outgoing admin
     $outgoingAdminData = $this->model->findByUsername('users', $username);
     //
     $outgoingAdminACL = unserialize($outgoingAdminData->acl);
+    
     if (($key = array_search($role, $outgoingAdminACL)) !== false) unset($outgoingAdminACL[$key]);
     
-    $updatedACL = array_values($outgoingAdminACL);
+    $updatedACL = serialize(array_values($outgoingAdminACL));
 
     //Now update the database
 
@@ -82,9 +89,16 @@ class Superuser extends Controller{
       'acl'=>$updatedACL
     ];
     if(!$this->model->update($outgoingAdminData->id, $fields)) 
-    return $this->response->SendResponse(400, false, "Failed to make this get this dude out as an admin for some reasons.");
+    return $this->response->SendResponse(
+      400, false, "Failed to make this get this dude out as an admin for some reasons."
+    );
+    
+    //fetch deposed admin
+    $deposed = $this->model->findByUsername('users', $username);
+    $acl = unserialize($deposed->acl);
+    $deposed->acl =$acl;
     //returning success message
-    return $this->response->SendResponse(200, false, `{$outgoingAdminData->username} is now ${$role}`);
+    return $this->response->SendResponse(200, false, "This dude's admin role has been revoked", true, $deposed);
 
   }
 }

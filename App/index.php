@@ -32,6 +32,7 @@ class index{
 
 }
 $GLOBALS['indexMiddleware'] =$middleware = new IndexMiddleware();
+
 if(array_key_exists('HTTP_AUTHORIZATION',$_SERVER)){
   $aclUsername = $middleware->getACL_Username($_SERVER['HTTP_AUTHORIZATION']);
   //$GLOBALS['indexMiddleware']->dump();

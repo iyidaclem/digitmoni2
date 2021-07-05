@@ -128,7 +128,7 @@ class IndexMiddleware{
   }
 
   public function isInvAdmin(){
-    var_dump($this->sessionData['user_acl']);
+   // var_dump($this->sessionData['user_acl']);
     if(!in_array('invAdmin', $this->sessionData['user_acl'])) return false;
     return true;
   }
