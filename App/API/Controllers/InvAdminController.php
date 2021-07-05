@@ -40,7 +40,7 @@ class InvAdminControl extends Controller{
     );
     if(!$this->middleware->isSuperAdmin() && !$this->middleware->isInvAdmin())
     return $this->response->SendResponse(
-      400, false, 'You dont have access to to perform this action.'
+      400, false, ACL_MSG
     );
 
     //Now take the input and sanitize them
@@ -69,6 +69,9 @@ class InvAdminControl extends Controller{
     if(!$this->model->insert($fields)) return $this->response->SendResponse(
       400, false, 'Failed to create a damn investment package.'
     );
+    //LOG ACTION
+
+    //send a message
     return $this->response->SendResponse(
       200, true, 'Investment package successfully created.');
   }
@@ -78,9 +81,35 @@ This next action when called suspends the investment package so
 users can no longer enrol for it
 */ 
 
-  public function suspendAction($packageName){
+  public function package_statusAction($packageID, $newStatus){
+    //making sure the incoming request is a POST request
+    if(!$this->input->isPost()) return $this->response->SendResponse(
+      401, false, POST_MSG
+    );
+    //making sure the request is either from super admin or inv admin
+    if(!$this->middleware->isSuperAdmin() && !$this->middleware->isInvAdmin())
+    return $this->response->SendResponse(
+      400, false, ACL_MSG
+    );
+    //Now supspend a pakackage with the given ID or namae. 
+    $fields= [
+      'status'=>$newStatus
+    ];
+    //update package in Database
+    $this->table = 'investments';
+    if($updateStatus = $this->model->update($packageID, $fields = false)) 
+    return $this->response->SendResponse(
+      401, false, 'Failed to change Investment package status.'
+    );
+
+    //send return success message 
     
+
+
+
   }
+
+
 /*
 ===================================================
 This nex action will return a list of invest packages we offer
@@ -98,8 +127,14 @@ This nex action will return a list of invest packages we offer
     
     //Now query the database and fetch all packages and return;
     $this->table = 'investments';
-    $allPackage = $this->model->find([
+    $allPackageRunning = $this->model->find([
       'conditions' => 'state = ?','bind' => ['running']]);
+    //Now query to get all disabled package
+    $allPackageDisable = $this->model->find([
+      'conditions' => 'state = ?','bind' => ['disabled']]);
+    $allPackage = [];
+    $allPackage['running'] = $allPackageRunning;
+    $allPackage['disabled'] = $allPackageDisable;
     //sending back response
       return $this->response->SendResponse(200, true, '', true, $allPackage);
   }
@@ -110,25 +145,7 @@ This nex action will return a list of invest packages we offer
 
   }
 
-  public function cancelAction($packageID,$packageName){
-    //making sure it is a GET request 
-    if(!$this->input->isGet()) return $this->response->SendResponse(
-      401, false, GET_MSG
-    );
-    //making sure the user is either the supeer admin or the investment admin
-    if(!$this->middleware->isSuperAdmin() && !$this->middleware->isInvAdmin()) 
-    return $this->response->SendResponse(400, false, ACL_MSG);
-
-    //now query the database with the package name provided
-    $this->table = 'investments';
-    $package = $this->model->findFirst([
-      'conditions' => 'id = ? AND option_name = ?',
-      'bind' => [$packageID, $packageName]
-    ]);
-
-    //here set package state to disable.
-
-  }
+ 
 /*
 ===================================================
 */ 

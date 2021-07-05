@@ -21,7 +21,7 @@ class InvestmentController extends Controller{
     $this->db = new DataBase();
   }
 
-  public function indexAction(){
+  public function our_offerAction(){
 
   }
 
@@ -31,5 +31,25 @@ class InvestmentController extends Controller{
 
   public function investAction(){
          
+  }
+
+  public function cancelAction($user,$packageName){
+    //making sure it is a GET request 
+    if(!$this->input->isGet()) return $this->response->SendResponse(
+      401, false, GET_MSG
+    );
+    //making sure the user is either the supeer admin or the investment admin
+    if(!$this->middleware->isSuperAdmin() && !$this->middleware->isInvAdmin()) 
+    return $this->response->SendResponse(400, false, ACL_MSG);
+
+    //now query the database with the package name provided
+    $this->table = 'user_investments';
+    $package = $this->model->findFirst([
+      'conditions' => 'id = ? AND option_name = ?',
+      'bind' => [$packageID, $packageName]
+    ]);
+
+    //here set package state to disable.
+
   }
 }
