@@ -28,3 +28,5 @@ define('GET_MSG', 'Only GET requests are allowed.');
 define('ACL_MSG', 'Page not found! Go back to previous page.');
 define('POST_MSG', 'Only POST requests are allowed.');
 define('NOT_FOUND_MSG', '');
+define('ALL_INV_MSG', 'Here is a list of our offers.');
+define('WNT_WRNG_MSG', 'Ah! Something went wrong, our team is on it.');

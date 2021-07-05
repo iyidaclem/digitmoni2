@@ -96,4 +96,8 @@ class Model{
   public function findByEmail($table, $email) {
     return $this->_db()->findFirst($table,['conditions'=>"email = ?", 'bind' => [$email]]);
   } 
+
+  public function findByState($table, $state) {
+    return $this->_db()->findFirst($table,['conditions'=>"status = ?", 'bind' => [$state]]);
+  } 
 }

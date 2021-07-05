@@ -103,9 +103,9 @@ users can no longer enrol for it
     );
 
     //send return success message 
-    
-
-
+    return $this->response->SendResponse(
+      200, true, 'Investment package status successfully updated.'
+    );
 
   }
 
