@@ -29,7 +29,16 @@ class UadminController extends Controller{
 
   }
 
+  public function new_acc_ruleAction(){
+
+  }
+
+  public function update_ruleAction(){
+
+  }
+
+  public function user_utility_recordAction(){
+
+  }
   
-
-
 }
