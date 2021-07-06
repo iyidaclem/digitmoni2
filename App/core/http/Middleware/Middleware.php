@@ -31,6 +31,10 @@ class Middleware{
      var_dump($session);die();
   }
 
+  public function rand6(){
+    return mt_rand(100000,999999); 
+  }
+
 
   public function token(){
     return $this->generateRandomString();

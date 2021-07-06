@@ -7,7 +7,7 @@ use API\Model\Users;
 use core\FH;
 use core\http\Middleware\Middleware;
 use core\Model as CoreModel;
-use Response;
+use core\Response as CoreResponse;
 use database\DataBase;
 
 class FundController extends Controller{
@@ -15,6 +15,8 @@ class FundController extends Controller{
   private $model;
   private $db;
   private $middleware;
+  private $indexMiddleware;
+  private $response;
   
   public function __construct($controller, $action) {
     parent::__construct($controller, $action);
@@ -22,11 +24,19 @@ class FundController extends Controller{
     $this->model = new CoreModel('user_fund');
     $this->db = new DataBase();
     $this->middleware = new Middleware();
+    $this->indexMiddleware = $GLOBALS['indexMiddleware'];
+    $this->response = new CoreResponse();
   }
 
   public function checkbalAction(){
-
-   // $loggedInUser = $this->middleware->loggedUser();
+    //check request method 
+    if(!$this->input->isGet()) return $this->response->SendResponse(
+      401, false, GET_MSG
+    );
+    //check access level 
+    if($this->indexMiddleware->isUser()) return $this->response->SendResponse(
+      401, false, ACL_MSG
+    );
    $loggedInUser = 'Vince';
     $fund = $this->model->findByUsername($this->model->_table, $loggedInUser);
     $balance = $fund->balance;

@@ -88,6 +88,6 @@ class InvestmentController extends Controller{
 
     //Fund his account with the right amount 
     
-
+    
   }
 }

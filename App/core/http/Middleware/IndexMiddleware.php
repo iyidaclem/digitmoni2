@@ -73,6 +73,7 @@ class IndexMiddleware{
     $session['user_acl'] = $aclArry;
     $session['loggedUser'] = $sessionData->username;
     $session['loggedUserID'] = $userdata->id;
+    
     //return $session;
     //var_dump($session);die();
     $this->sessionData = $session;

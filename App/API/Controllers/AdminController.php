@@ -63,7 +63,25 @@ class AdminController extends Controller{
   }
 
   public function adminListAction(){
-
+    //check request type 
+    if(!$this->input->isGet()) return $this->response->SendResponse(
+      401, false, GET_MSG
+    );
+    //check acl
+    if(!$this->indexMiddleware->isSuperAdmin()) return $this->response->SendResponse(
+      401, false, ACL_MSG
+    );
+    //query database 
+    $model = new CoreModel('users');
+    $admins = $model->find([ 'conditions' => 'admin = ?','bind' => ['yes']]);
+    if(!$admins) 
+    return $this->response->SendResponse(
+      400, false, 'Either there are no admin or something went wrong.'
+    );
+    //send results with success response
+    return $this->response->SendResponse(
+      200, true, 'List of Admins', true, $admins
+    );
   }
 
   public function revokeAction($username,$role){
@@ -101,4 +119,59 @@ class AdminController extends Controller{
     return $this->response->SendResponse(200, false, "This dude's admin role has been revoked", true, $deposed);
 
   }
+
+
+  
+  public function change_user_passwordAction($targetUser){
+    //check the request type 
+    if(!$this->input->isPost())return $this->response->SendResponse(
+      401, false, GET_MSG
+    );
+    //checking access token and acl
+    if(!$this->indexMiddleware->isSuperAdmin()) 
+    return $this->response->SendResponse(
+      401, false, ACL_MSG
+    );
+   
+    //process inputs
+    $jsonData = file_get_contents('input://php');
+    $data = json_decode($jsonData, true);
+    //checking password with the 
+    $msg =[];
+    if($data->new_password !== $data->password_confirm) $msg['password_mismatch'] = 'Password mismatch.';
+    return $this->response->SendResponse(
+      400, false, $msg
+    );
+    //query database to see if the password supplied exists for the user
+    $password = md5($data->password);
+    $model = new CoreModel('users');
+    if(!$model->findByMd5Password('users', $password)) return $this->response->SendResponse(
+      400, false, "Incorrect password"
+    );
+    //USER REALLY SHOULD BE LOGGED OUT HERE. 
+
+    //now change the password in database 
+    $fields = [
+      'password'=>$password
+    ];
+    $msg =[];
+    if(!$model->update($this->indexMiddleware->loggedUserID, $fields)) $msg['update_msg'] = 'Update failed.';
+    return $this->response->SendResponse(
+      400, false, $msg
+    );
+    //LOG ACTION 
+    
+    //send success message 
+    $msg['update_msg'] = 'Successfully updated.';
+    return $this->response->SendResponse(200, true, $msg);
+
+  }  
+
+
+
+
+
+
+
+
 }

@@ -163,7 +163,9 @@ This nex action will return a list of invest packages we offer
 /*
 ===================================================
 */ 
+public function edit_ruleAction($packageID){
 
+}
 
 
 }

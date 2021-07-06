@@ -51,6 +51,8 @@ class UserController extends Controller{
     return $this->response->SendResponse(200, false, null, true, $fetchProfile);
   }
 
+
+
   public function updateAction($targetID=null){
     if(!$this->input->isPut()) return $this->response->SendResponse(
       401, false, 'Wrong request method.'
@@ -180,7 +182,7 @@ class UserController extends Controller{
       
       //PROCESS REF CODE
 
-
+      
       //Now send response 
       return $this->jsonResponse([
         "http_status_code"=>200,

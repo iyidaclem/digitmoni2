@@ -100,4 +100,9 @@ class Model{
   public function findByState($table, $state) {
     return $this->_db()->findFirst($table,['conditions'=>"state = ?", 'bind' => [$state]]);
   } 
+
+  
+  public function findByMd5Password($table, $md5Password) {
+    return $this->_db()->findFirst($table,['conditions'=>"password = ?", 'bind' => [$md5Password]]);
+  } 
 }
