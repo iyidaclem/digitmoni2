@@ -80,15 +80,76 @@ class FundController extends Controller{
 
 
   public function change_acc_numAction(){
-
+   
   }
 
 
-  public function getcardAction(){
-
+  public function getcardAction($username=null){
+    //request method check
+    if($this->input->isPost()) return $this->response->SendResponse(
+      405, false, POST_MSG
+    );
+    //check acl
+    if(!$this->indexMiddleware->isUser()) return $this->response->SendResponse(
+      403, false, ACL_MSG
+    );
+    //determine who the logged in user is
+    ($username==null)?$_username = $this->indexMiddleware->loggedUser():$_username = $username;
+    //query the database with this username to get card details
+    $model = new CoreModel('user_acc_det');
+    $userAccDetails = $this->model->find([
+      'conditions' => 'username = ?','bind' => [$_username]
+    ]);
+    if(!$userAccDetails) return $this->response->SendResponse(404, false, 'Your card no. isnt saved.');
+    //send success message with the card no showing only last four digits
+   // $userAccDetails->
+    //return $this->response->SendResponse(200, true, null,false, )
   }
 
   public function add_acc_noAction(){
+     //check request method 
+     if($this->input->isPost()) return $this->response->SendResponse(
+      405, false, POST_MSG
+    );
+    //check acl
+    if(!$this->indexMiddleware->isUser()) return $this->response->SendResponse(
+      403, false, ACL_MSG
+    );
+    //get logged in user
+    $loggedUsername = $this->indexMiddleware->loggedUser();
+    //process input 
+    $jsonData = file_get_contents('input://php');
+    $data = json_decode($jsonData);
+    //sanitize
+    $sanitized = [];
+    $msg =[];
+    foreach($data as $k => $v){
+      if($k!='acl'){
+        $pureVals = FH::sanitize($v);
+      $sanitized[$k] = $pureVals;
+      }
+    }
+    //set up fields 
+    $fields = [
+      'account_no'=>$sanitized['account_no'],
+      'account_name'=>$sanitized['account_name'],
+      'bank'=>$sanitized['bank'],
+      'bank_id'=>$sanitized['bank_id']
+    ];
+    //insert into the database
+    $model = new CoreModel('user_bank_det');
+    if(!$model->insert($fields)) 
+    //LOG ACTION - DATABASE INSERT FAILURE FUND CONTROLLER
+    
+       //send error message
+    return $this->response->SendResponse(
+      500, false, 'Failed to save account number. There is a problem from our end. We are working it.'
+    );
+
+    //send success message
+    return $this->response->SendResponse(
+      200, true, 'Account number successfully saved.'
+    );
     
   }
 

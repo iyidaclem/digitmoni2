@@ -40,5 +40,10 @@ class UadminController extends Controller{
   public function user_utility_recordAction(){
 
   }
+
+  public function searchAction(){
+
+  }
+
   
 }

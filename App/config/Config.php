@@ -30,3 +30,5 @@ define('POST_MSG', 'Only POST requests are allowed.');
 define('NOT_FOUND_MSG', '');
 define('ALL_INV_MSG', 'Here is a list of our offers.');
 define('WNT_WRNG_MSG', 'Ah! Something went wrong, our team is on it.');
+define('JSON_MSG', 'Input is not a valid json format.');
+define('SERVER_MSG', 'There is a problem. We cant initiate a transaction at the moment.');
