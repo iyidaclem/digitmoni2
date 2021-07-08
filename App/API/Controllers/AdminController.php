@@ -32,7 +32,7 @@ class AdminController extends Controller{
   public function appointAction($username,$role){
     //checking for request method.
     if($this->input->isPost()) return $this->response->SendResponse(
-      401,false, 'Only POST requests are allowed'
+      403,false, 'Only POST requests are allowed'
     );
     //making sure that the user is the super admin
     if(!$this->indexMiddleware->isSuperAdmin()) return $this->response->SendResponse(

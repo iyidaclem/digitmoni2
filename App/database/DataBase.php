@@ -128,6 +128,10 @@ class DataBase{
     return false;
   }
 
+  public function lastID(){
+    return $this->_pdo->lastInsertId();
+  }
+
   public function findByUserIdAndPassword($username,$hashedPassword,$params=[]){
     $conditions = [
       'conditions' => 'username = ? AND password = ?',

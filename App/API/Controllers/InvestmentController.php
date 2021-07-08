@@ -10,6 +10,8 @@ use core\http\Middleware\Middleware;
 use core\Model as CoreModel;
 use core\Response;
 use database\DataBase;
+use PDO;
+use PDOException;
 
 class InvestmentController extends Controller{
   private $input, $model, $db, $response, $indexMiddleware, $middleware;
@@ -24,40 +26,8 @@ class InvestmentController extends Controller{
     $this->indexMiddleware = $GLOBALS['indexMiddleware'];
   }
 
-  public function our_offerAction(){
-    //making sure is is get request 
-    if(!$this->input->isGet()) return $this->response->SendResponse(
-      401, false, GET_MSG
-    ); 
-    //guess anyone can call this end point
-    $this->table = 'investments';
-    $allRunningPackage = $this->model->findByState('investments', 'running');
 
-    return $this->response->SendResponse(
-      200, true, ALL_INV_MSG, true, $allRunningPackage
-    );
-  }
-
-  public function viewpackageAction($packageID){
-    //making sure it is the right request GET
-    if(!$this->input->isGet) return $this->response->SendResponse(
-      401, false, GET_MSG
-    );
-
-    //querying the database to view package detail
-    $this->table = 'investments';
-    $packageDet = $this->model->findFirst([
-      'conditions' => 'id = ?','bind' => [$packageID]]);
-    //send failure response
-    if(!$packageDet) return $this->response->SendResponse(
-      404, false, WNT_WRNG_MSG
-    );
-    //send success response
-    return $this->response->SendResponse(
-      200, true, null, true,$packageDet 
-    );
-
-  }
+ 
 
   public function investAction($user=null){
     //check incoming request 
