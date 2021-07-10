@@ -10,6 +10,8 @@ use core\http\Middleware\Middleware;
 use core\Model as CoreModel;
 use core\Response;
 use database\DataBase;
+use PHPMailer\PHPMailer;
+use PDO;
 
 class Manage extends Controller{
   private $input;
@@ -84,6 +86,7 @@ class Manage extends Controller{
     return $this->response->SendResponse(
       400, false, $msg
     );
+    
     //query database to see if the password supplied exists for the user
     $password = md5($data->password);
     $model = new CoreModel('users');

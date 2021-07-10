@@ -24,6 +24,7 @@ class InvestmentController extends Controller{
     $this->db = new DataBase();
     $this->response = new Response();
     $this->indexMiddleware = $GLOBALS['indexMiddleware'];
+    
   }
 
 

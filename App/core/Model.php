@@ -98,7 +98,7 @@ class Model{
   } 
 
   public function findByState($table, $state) {
-    return $this->_db()->findFirst($table,['conditions'=>"state = ?", 'bind' => [$state]]);
+    return $this->_db()->find($table,['conditions'=>"state = ?", 'bind' => [$state]]);
   } 
 
   

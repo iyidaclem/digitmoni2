@@ -31,10 +31,140 @@ class HomeController extends Controller{
     
   }
 
-  public function check_promoAction(){
-    //check request type 
+  public function createAction(){
+    if(!$this->input->isPost()) $this->response->SendResponse(
+      401, false, POST_MSG
+    );
+
+    $putData = file_get_contents('php://input');
+    $data = json_decode($putData);
+    //making sure that all inputs are supplied
+    //  CODE 
+
+    //Sanitizing all the input values
+    $sanitized = [];
+    $msg =[];
+    foreach($data as $k => $v){
+      if($k!='acl'){
+        $pureVals = FH::sanitize($v);
+      $sanitized[$k] = $pureVals;
+      }
+    }
+  
+    //var_dump(array_keys($sanitized)); die();
+    $inputKeys=['first_name','lastname','username','email','pword','created_at', 'state', 'addres','phone','entry_code', 'ref_code','acc_type','activity' ];
+
+    if(FH::inputIsset($sanitized, $inputKeys));
+
+    $acl = serialize($data->acl);
+    
+    //creating input fields array
+    $fields=[
+      'first_name'=>$sanitized['first_name'],
+      'lastname'=>$sanitized['lastname'],
+      'username'=>$sanitized['username'],
+      'email'=>$sanitized['email'],
+      'pword'=>$sanitized['pword'],
+      'created_at'=>$sanitized['created_at'],
+      'state'=>$sanitized['state'],
+      'addres'=>$sanitized['addres'],
+      'phone'=>$sanitized['phone'], 
+      'acl'=>$acl,
+      'entry_code'=>$sanitized['entry_code'],
+      'ref_code'=>$sanitized['ref_code'],
+      'acc_type'=>$sanitized['acc_type'],
+      'activity'=>$sanitized['activity']
+      ];
+    
+      //check if user already exists in database
+      $userExist = $this->model->findByUsername('users', $sanitized['username']);
+      $emailExist = $this->model->findByEmail('users', $sanitized['email']);
+      $msg = [];
+      if(!empty($userExist) || !empty($emailExist)){
+        (!empty($userExist))?array_push($msg, 'Username already exists. Use another username please.'):null;
+        (!empty($emailExist))?array_push($msg, 'Email already exists. Use another email please.'):null;
+        return $this->response->SendResponse(
+          401, false, $msg
+        );
+      }
+
+      //Create new account in the database and if it is successful, iniatialize it in fund_user table
+      if($this->model->insert($fields)) $this->user->initializeAccount($sanitized['username']);
+      
+      //PROCESS REF CODE
+      
+      
+      //Now send response 
+      return $this->jsonResponse([
+        "http_status_code"=>200,
+        "status"=>true, 
+        "message"=>'Your account has been created',
+        "data"=>[]
+      ]);
+
+      return $this->jsonResponse([
+        "http_status_code"=>500,
+        "status"=>false, 
+        "message"=>"Something went wrong. We are working on it.",
+        "data"=>[]
+      ]);
+
+  }
+
+
+  public function loginAction(){   
     if(!$this->input->isPost()) return $this->response->SendResponse(
-      403, false, POST_MSG
+      401, false, POST_MSG
+    );
+ 
+    $midware = new Middleware();
+    $token = $midware->token();
+    //inputs will be form data 
+    $request = $_REQUEST;
+    $username = FH::sanitize($request['username']);
+    $password  = FH::sanitize($request['password']);
+    $user_agent = trim($request['user_agent']);
+    
+    //checking if there is a user with the given username and password
+
+    $checkUser = $this->model->findByUsernamePassword($username, $password);
+    
+    if(empty($checkUser)) return $this->response->SendResponse(
+      401, false, "Username or password incorrect."
+    );
+
+    //preparing fields
+    $fields = [
+      "username"=>$username,
+      "access_token"=>$token,
+      "user_agent"=>$user_agent,
+      "token_exp"=>604800,
+    ];
+    
+    $model= new CoreModel('session_tb');
+    $userLogged = $model->findByUsername('session_tb', $username);
+    if($userLogged){
+      $this->db->delete('session_tb',$userLogged->id);
+    }
+    
+    //create a new session
+    $status = '';
+   $model->insert($fields)===true?$status=true:$status=false;
+   if($status)return $this->response->SendResponse(
+     200, false, ["username"=>$username,"access_token"=>$token,"token_exp"=>$fields['token_exp']]);
+
+   
+   if(!$status)return $this->response->SendResponse(
+     500, false, "Create Account First"
+   );
+  }
+
+
+
+  public function check_utility_promoAction(){
+    //check request type 
+    if(!$this->input->isGet()) return $this->response->SendResponse(
+      403, false, GET_MSG
     );
     //check database for active promo
     try{
@@ -71,13 +201,13 @@ class HomeController extends Controller{
 
   public function viewpackageAction($packageID){
     //making sure it is the right request GET
-    if(!$this->input->isGet) return $this->response->SendResponse(
+    if(!$this->input->isGet()) return $this->response->SendResponse(
       401, false, GET_MSG
     );
 
     //querying the database to view package detail
-    $this->table = 'investments';
-    $packageDet = $this->model->findFirst([
+    $model = new CoreModel('investments');
+    $packageDet = $model->find([
       'conditions' => 'id = ?','bind' => [$packageID]]);
     //send failure response
     if(!$packageDet) return $this->response->SendResponse(

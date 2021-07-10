@@ -9,6 +9,7 @@ use core\http\Middleware\Middleware;
 use core\Model as CoreModel;
 use core\Response as CoreResponse;
 use database\DataBase;
+use PDOException;
 
 class FundController extends Controller{
   private $input;
@@ -50,8 +51,12 @@ class FundController extends Controller{
     return $this->response->SendResponse(
       200, true, null, false, $balance);
   }
-
-  public function fundAction($reference, $saveCard='no'){
+/**
+ * 
+ * 
+ * 
+ */
+  public function fundAction($cardExists='yes',$uniqueCardID=null){
     //make sure it is post request 
     if(!$this->input->isPost()) return $this->response->SendResponse(
       401, false, POST_MSG
@@ -60,24 +65,100 @@ class FundController extends Controller{
     if(!$this->indexMiddleware->isUser())return $this->response->SendResponse(
       401, false, ACL_MSG
     );
-    //if $saveCard is YES, then save card details
+    //if $cardExists = yes, then we need to get the card details from inside here using the chosen cardID
+    if($cardExists==='yes' && $uniqueCardID!==null)
+    $model = new CoreModel('card_det');
+    $getCardDetail = $model->findFirst($uniqueCardID);
+    $ourVendorCardID = $getCardDetail->vendorcardID;
+    $username = $getCardDetail->username;
+    $cardNo = $getCardDetail->card_no;
+    $name = $getCardDetail->name;
+    $reference = referenceGen();
 
-    //call our transfer facilitator api with the card details provided
-
-    //if transfer fail, send failure message
-    
-    //if successful transfer to us, update his balance after taking care of the charges
-
-    //$saveCard == no, field will be 
-    $fields = [
-      //"balance"=>$amount,
+    //initiate funding
+    $model = new CoreModel('fund_history');
+    $fields=[
+      'username'=>$username,
+      'reference'=>$reference,
+      'cardno'=>$uniqueCardID,
+      'trx_status'=>'initiated'
     ];
+    if(!$model->insert($fields)) //ERROR LOG
+    return $this->response->SendResponse(
+      500, false, "Please bear with us. There is a problem and we are on it."
+    );
 
-    //$saveCard == yes, define fields with card details hashed
-    $fundAccount = $this->model->update($this->model->_table, $fields);
+    //initiate a call to paystack or any other payment facilitator to send us the money
+    $amount = FH::sanitize($_REQUEST['amount']);
+    $sendUsFundAPI_call = '';
+
+    //if the transaction is unsuccessful, send message 
+    if($sendUsFundAPI_call ===false)return $this->response->SendResponse(
+      503, false, 'Failed transaction. Please try again later.');
+    
+
+    //if the transaction is successfull, set status to "completed" update  
+    if($sendUsFundAPI_call === true)
+    $model = new CoreModel('fund_history');
+    $fields=[
+      'trx_status'=>'completed'
+    ];
+    //if failure to update transaction status
+    if(!$model->update($this->indexMiddleware->loggedUserID(), $fields))
+    //ERROR LOG ACTION
+    return $this->response->SendResponse(
+      500, false, 'Funds recieve. It will reflect in your wallet shortly. There is a problem and we are working to resolve it.');
+    //on successful trx_status update, user account balance
+      $model = new CoreModel('user_fund');
+    $fields = ['balance'=>$amount];
+    if(!$model->update($this->indexMiddleware->loggedUserID, $fields))
+    return $this->response->SendResponse(503,false, 'Fund recieved. Will reflect on your wallet shortly.');
+    //GENERAL SUCCESS MESSAGE
+    return $this->response->SendResponse(200, true, 'Wallet funded!');
 
   }
 
+
+  public function fund_newcardAction(){
+    if(!$this->input->isPost()) return $this->response->SendResponse(
+      400, false, GET_MSG
+    );
+    if(!$this->indexMiddleware->isUser()) return $this->response->SendResponse(
+      401, false, ACL_MSG
+    );
+    //take in card details and begin transaction
+    $cardName = FH::sanitize($_REQUEST['card_name']);
+    $cardNo = FH::sanitize($_REQUEST['card_no']);
+    $cardDate = FH::sanitize($_REQUEST['card_date']);
+    $amount = FH::sanitize($_REQUEST['amount']);
+    $card3digit =FH::sanitize($_REQUEST['card_three']);
+    
+
+  }
+
+
+  public function card_existsAction(){
+    //check requst method 
+    if(!$this->input->isPost()) return $this->response->SendResponse(
+      401, false, POST_MSG
+    );
+    //check acl
+    if(!$this->indexMiddleware->isUser())return $this->response->SendResponse(
+      401, false, ACL_MSG
+    );
+    //decide who the logged in user is 
+    $loggedUsername = $this->indexMiddleware->loggedUser();
+    $model = new CoreModel('card_det');
+    //query database to check if 
+    $findUserCard = $model->find([ 'conditions' => 'username = ?','bind' => [$loggedUsername]]);
+    if(empty($findUserCard))return $this->response->SendResponse(
+      404, false
+    );
+    foreach($findUserCard as $cardUnique){
+      $cardID[] = $cardUnique->cardID;
+    }
+    return $this->response->SendResponse(200, true, null, false, $cardID);
+  }
 
   public function change_acc_numAction(){
    
