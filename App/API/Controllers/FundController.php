@@ -10,14 +10,11 @@ use core\Model as CoreModel;
 use core\Response as CoreResponse;
 use database\DataBase;
 use PDOException;
+use core\helper\Help;
+use API\Model\Fund;
 
 class FundController extends Controller{
-  private $input;
-  private $model;
-  private $db;
-  private $middleware;
-  private $indexMiddleware;
-  private $response;
+  private $input, $model, $db, $middleware, $indexMiddleware, $response, $help;
   
   public function __construct($controller, $action) {
     parent::__construct($controller, $action);
@@ -27,6 +24,7 @@ class FundController extends Controller{
     $this->middleware = new Middleware();
     $this->indexMiddleware = $GLOBALS['indexMiddleware'];
     $this->response = new CoreResponse();
+    $this->help = new Help();
   }
 
   public function checkbalAction($targetUser=null){
@@ -48,8 +46,7 @@ class FundController extends Controller{
     );
     //send success message with balance and other details
     $balance = $fund->balance;
-    return $this->response->SendResponse(
-      200, true, null, false, $balance);
+    return $this->response->SendResponse(200, true, null, false, $balance);
   }
 /**
  * 
@@ -73,7 +70,7 @@ class FundController extends Controller{
     $username = $getCardDetail->username;
     $cardNo = $getCardDetail->card_no;
     $name = $getCardDetail->name;
-    $reference = referenceGen();
+    $reference = $this->help->Unique_Id_Gen('R', 16);
 
     //initiate funding
     $model = new CoreModel('fund_history');
@@ -132,8 +129,41 @@ class FundController extends Controller{
     $cardDate = FH::sanitize($_REQUEST['card_date']);
     $amount = FH::sanitize($_REQUEST['amount']);
     $card3digit =FH::sanitize($_REQUEST['card_three']);
+    $reference = $this->help->Unique_Id_Gen('R',12);
     
+    //get logged in user
+    $loggedUsername = $this->indexMiddleware->loggedUser();
+    $loggedUserID = $this->indexMiddleware->loggedUserID();
+    //instantiate transaction in database
+    $model = new CoreModel('fund_history'); 
+    $fields=[
+      'username'=>$loggedUsername,
+      'reference'=>$reference,
+      'cardno'=>null,
+      'trx_status'=>'initiated'
+    ];
+    if(!$model->insert($fields)) return $this->response->SendResponse(
+      500, false, 'Our bad! This service is currently down, we are working on it.'
+    );
+    //getting the last inserted ID
+    $lastInsertID = $model->lastIDinserted();
+    //now call our payment facilitator API 
+    $transferFunds = '';
 
+    //in case of failed transfer 
+    if(!$transferFunds) return $this->response->SendResponse(
+      503, false, "Sorry failed transaction. Please try again later."
+    );
+    //in case of success, update database 
+    if($transferFunds)
+    $completedFields =[
+      'trx_status'=>'completed'
+    ];
+    if(!$model->update($lastInsertID, $completedFields)) return $this->response->SendResponse(
+      400, false, "Funds recieved. It will reflect on your dashboard shortly."
+    );
+    //send full success message
+    return $this->response->SendResponse(200, false, 'Fund recieved.');
   }
 
 
@@ -177,7 +207,7 @@ class FundController extends Controller{
     //determine who the logged in user is
     ($username==null)?$_username = $this->indexMiddleware->loggedUser():$_username = $username;
     //query the database with this username to get card details
-    $model = new CoreModel('user_acc_det');
+    $model = new CoreModel('card_det');
     $userAccDetails = $this->model->find([
       'conditions' => 'username = ?','bind' => [$_username]
     ]);
@@ -202,14 +232,7 @@ class FundController extends Controller{
     $jsonData = file_get_contents('input://php');
     $data = json_decode($jsonData);
     //sanitize
-    $sanitized = [];
-    $msg =[];
-    foreach($data as $k => $v){
-      if($k!='acl'){
-        $pureVals = FH::sanitize($v);
-      $sanitized[$k] = $pureVals;
-      }
-    }
+    $sanitized = FH::arraySanitize($data);
     //set up fields 
     $fields = [
       'account_no'=>$sanitized['account_no'],
@@ -239,13 +262,44 @@ class FundController extends Controller{
   }
 
   public function withdrawAction($amount){
+    //check incoming request 
+    if(!$this->input->isPost()) return $this->response->SendResponse(
+      405, false, POST_MSG);
+    //acl check
+    if(!$this->indexMiddleware->isUser()) return $this->response->SendResponse(
+      401, false, ACL_MSG);
+    //get logged-in user
     $loggedInUser = $this->middleware->loggedUser();
     /*check if the user have up to the amount and if not send decline response*/
+    $fundModel = new Fund('user_fund');
+    $userAcc = $fundModel->UserAaccBalance($loggedInUser);
+    $userAccBalance = $userAcc->balance;
+    if($amount>$userAccBalance)return $this->response->SendResponse(
+      402, false, 'Insufficient balance!');
+    
+    //get user account details 
+    $fundModel = new Fund('user_acc_det');
+    $account = $fundModel->UserAcc($loggedInUser);
 
+    //instantiate withdrawal in the database
+    $fundModel = new Fund('withdraw_history');
+    
+   $reference = $this->help->Unique_Id_Gen('R', 12);
+    $withdrawField=[
+      'username'=>$loggedInUser,
+      'reference'=>$reference,
+      'amount'=>$amount,
+      'bank_det'=>$account->name .' '.$account->bank_name,
+      'trx_status'=>'initiated'
+    ];
+    if(!$fundModel->insert($withdrawField)) return $this->response->SendResponse(
+      503, false, 'Sorry something went wrong. We are on it.'
+    );
+    
     //send transfer request to paystack. 
-
+    $withDrawRequest = '';
     //if it fails, send fail response
-
+    if(!$withDrawRequest) 
     //if it succeeds, updtate the database
     $fields = [
       "balance"=>$amount,
