@@ -271,8 +271,7 @@ class FundController extends Controller{
     $loggedInUser = $this->middleware->loggedUser();
     /*check if the user have up to the amount and if not send decline response*/
     $fundModel = new Fund('user_fund');
-    $userAcc = $fundModel->UserAaccBalance($loggedInUser);
-    $userAccBalance = $userAcc->balance;
+    $userAccBalance = $fundModel->UserAaccBalance($loggedInUser);
     if($amount>$userAccBalance)return $this->response->SendResponse(
       402, false, 'Insufficient balance!');
     
