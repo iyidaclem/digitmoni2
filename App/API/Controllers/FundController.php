@@ -12,6 +12,7 @@ use database\DataBase;
 use PDOException;
 use core\helper\Help;
 use API\Model\Fund;
+use API\Model\UserCard;
 
 class FundController extends Controller{
   private $input, $model, $db, $middleware, $indexMiddleware, $response, $help;
@@ -53,7 +54,7 @@ class FundController extends Controller{
  * 
  * 
  */
-  public function fundAction($cardExists='yes',$uniqueCardID=null){
+  public function fundAction(){
     //make sure it is post request 
     if(!$this->input->isPost()) return $this->response->SendResponse(
       401, false, POST_MSG
@@ -62,31 +63,33 @@ class FundController extends Controller{
     if(!$this->indexMiddleware->isUser())return $this->response->SendResponse(
       401, false, ACL_MSG
     );
-    //if $cardExists = yes, then we need to get the card details from inside here using the chosen cardID
-    if($cardExists==='yes' && $uniqueCardID!==null)
-    $model = new CoreModel('card_det');
-    $getCardDetail = $model->findFirst($uniqueCardID);
+    //getting username of logged user
+    $loggedInUser = $this->indexMiddleware->loggedInUser();
+
+    //Get users card details
+    $fundModel = new Fund('card_det');
+    $getCardDetail = $fundModel->findByUsername('card_det', $loggedInUser);
     $ourVendorCardID = $getCardDetail->vendorcardID;
-    $username = $getCardDetail->username;
     $cardNo = $getCardDetail->card_no;
     $name = $getCardDetail->name;
     $reference = $this->help->Unique_Id_Gen('R', 16);
-
+  
     //initiate funding
-    $model = new CoreModel('fund_history');
+    $amount = FH::sanitize($_REQUEST['amount']);
+    $fundModel = new Fund('userfund_rec');
     $fields=[
-      'username'=>$username,
+      'username'=>$loggedInUser,
       'reference'=>$reference,
-      'cardno'=>$uniqueCardID,
-      'trx_status'=>'initiated'
+      'purpose'=>'funding',
+      'amount'=>$amount,
+      'status'=>'initiated'
     ];
-    if(!$model->insert($fields)) //ERROR LOG
+    if(!$fundModel->insert($fields)) //ERROR LOG
     return $this->response->SendResponse(
       500, false, "Please bear with us. There is a problem and we are on it."
     );
 
     //initiate a call to paystack or any other payment facilitator to send us the money
-    $amount = FH::sanitize($_REQUEST['amount']);
     $sendUsFundAPI_call = '';
 
     //if the transaction is unsuccessful, send message 
@@ -96,23 +99,20 @@ class FundController extends Controller{
 
     //if the transaction is successfull, set status to "completed" update  
     if($sendUsFundAPI_call === true)
-    $model = new CoreModel('fund_history');
     $fields=[
-      'trx_status'=>'completed'
+      'status'=>'completed'
     ];
     //if failure to update transaction status
-    if(!$model->update($this->indexMiddleware->loggedUserID(), $fields))
+    if(!$fundModel->update($this->indexMiddleware->loggedUserID(), $fields))
     //ERROR LOG ACTION
     return $this->response->SendResponse(
       500, false, 'Funds recieve. It will reflect in your wallet shortly. There is a problem and we are working to resolve it.');
     //on successful trx_status update, user account balance
-      $model = new CoreModel('user_fund');
-    $fields = ['balance'=>$amount];
-    if(!$model->update($this->indexMiddleware->loggedUserID, $fields))
-    return $this->response->SendResponse(503,false, 'Fund recieved. Will reflect on your wallet shortly.');
-    //GENERAL SUCCESS MESSAGE
-    return $this->response->SendResponse(200, true, 'Wallet funded!');
-
+    $fundModel = new Fund('user_fund');
+    $userID = $this->indexMiddleware->loggedUserID();
+    if(!$fundModel->updateUserAccountBalance($loggedInUser, $amount, $userID))
+    return $this->response->SendResponse(500, false, 'Account funded. It will reflect on your balance shortly.');
+    return $this->response->SendResponse(200, true, 'Account successfully funded.');
   }
 
 
@@ -135,18 +135,19 @@ class FundController extends Controller{
     $loggedUsername = $this->indexMiddleware->loggedUser();
     $loggedUserID = $this->indexMiddleware->loggedUserID();
     //instantiate transaction in database
-    $model = new CoreModel('fund_history'); 
+    $fundModel = new Fund('userfund_rec'); 
     $fields=[
       'username'=>$loggedUsername,
       'reference'=>$reference,
-      'cardno'=>null,
-      'trx_status'=>'initiated'
+      'purpose'=>'funding',
+      'amount'=>$amount,
+      'status'=>'initiated'
     ];
-    if(!$model->insert($fields)) return $this->response->SendResponse(
+    if(!$fundModel->insert($fields)) return $this->response->SendResponse(
       500, false, 'Our bad! This service is currently down, we are working on it.'
     );
     //getting the last inserted ID
-    $lastInsertID = $model->lastIDinserted();
+    $lastInsertID = $fundModel->lastIDinserted();
     //now call our payment facilitator API 
     $transferFunds = '';
 
@@ -157,12 +158,15 @@ class FundController extends Controller{
     //in case of success, update database 
     if($transferFunds)
     $completedFields =[
-      'trx_status'=>'completed'
+      'status'=>'completed'
     ];
-    if(!$model->update($lastInsertID, $completedFields)) return $this->response->SendResponse(
+    if(!$fundModel->update($lastInsertID, $completedFields)) //ERR LOG ACTION- fund recieved, failed to register as completed
+    return $this->response->SendResponse(
       400, false, "Funds recieved. It will reflect on your dashboard shortly."
     );
     //send full success message
+    if(!$fundModel->updateUserAccountBalance($loggedUsername, $amount, $loggedUserID))return 
+      $this->response->SendResponse(200, false, 'Fund recieved.');
     return $this->response->SendResponse(200, false, 'Fund recieved.');
   }
 
@@ -195,7 +199,7 @@ class FundController extends Controller{
   }
 
 
-  public function getcardAction($username=null){
+  public function getcardAction(){
     //request method check
     if($this->input->isPost()) return $this->response->SendResponse(
       405, false, POST_MSG
@@ -205,16 +209,11 @@ class FundController extends Controller{
       403, false, ACL_MSG
     );
     //determine who the logged in user is
-    ($username==null)?$_username = $this->indexMiddleware->loggedUser():$_username = $username;
+    $_username = $this->indexMiddleware->loggedUser();
     //query the database with this username to get card details
-    $model = new CoreModel('card_det');
-    $userAccDetails = $this->model->find([
-      'conditions' => 'username = ?','bind' => [$_username]
-    ]);
-    if(!$userAccDetails) return $this->response->SendResponse(404, false, 'Your card no. isnt saved.');
-    //send success message with the card no showing only last four digits
-   // $userAccDetails->
-    //return $this->response->SendResponse(200, true, null,false, )
+    $userCard = new UserCard('usercard');
+    $lastFour = $userCard->cardLastFour($_username);
+    
   }
 
   public function add_acc_noAction(){
@@ -295,16 +294,20 @@ class FundController extends Controller{
     if(!$fundModel->insert($withdrawField)) return $this->response->SendResponse(
       503, false, 'Sorry something went wrong. We are on it.'
     );
-    
+    $lastInsertID = $fundModel->lastIDinserted();
     //send transfer request to paystack. 
     $withDrawRequest = '';
     //if it fails, send fail response
-    if(!$withDrawRequest) 
+    if(!$withDrawRequest) return $this->response->SendResponse(
+      503, false, 'Service is currently unavaialable.');
     //if it succeeds, updtate the database
-    $fields = [
-      "balance"=>$amount,
+    if($withDrawRequest) $withdrawFieldUpdate = [
+      "status"=>'completed',
     ];
-    $withrwal = $this->model->update($this->model->_table, $fields);
+    $withdrawalUpdate = $fundModel->update($lastInsertID, $withdrawFieldUpdate);
+    if(!$withdrawalUpdate) //WITHDRAW ERROR LOG ACTION
+    return $this->response->SendResponse(200, true,'Your withdrawal is successful');
+    return $this->response->SendResponse(200, false, 'Your withdrawal is successful.');
   }
 
 

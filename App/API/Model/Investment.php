@@ -6,6 +6,4 @@ use core\Model;
 
 class Investment extends Model{
   
- 
-
 }

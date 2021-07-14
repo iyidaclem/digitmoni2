@@ -24,5 +24,4 @@ class Encrypt{
     return $decrypted;
   }
 
-
 }
