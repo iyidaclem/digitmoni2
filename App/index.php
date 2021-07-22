@@ -10,6 +10,7 @@ define('ds', DIRECTORY_SEPARATOR);
 define('ROOT', dirname(__FILE__));
 
 require_once(ROOT . ds . 'config' . ds . 'config.php');
+require_once(ROOT . ds . 'core' . ds . 'Calls' . ds . 'API_CONFIG.php');
 
 function autoload($className){
   $classAry = explode('\\',$className);

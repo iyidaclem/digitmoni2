@@ -288,7 +288,7 @@ class FundController extends Controller{
       'reference'=>$reference,
       'amount'=>$amount,
       'bank_det'=>$account->name .' '.$account->bank_name,
-      'trx_status'=>'initiated'
+      'status'=>'initiated'
     ];
     if(!$fundModel->insert($withdrawField)) return $this->response->SendResponse(
       503, false, 'Sorry something went wrong. We are on it.'
