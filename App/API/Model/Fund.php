@@ -25,6 +25,7 @@ class Fund extends Model{
       'conditions' => 'username = ?','bind' => [$targetUser]
     ]);
     $accBal = $UserAccDetails->balance;
+    return $accBal;
   }
 
   public function UserAcc($targetUser){

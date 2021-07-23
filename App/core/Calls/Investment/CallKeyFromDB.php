@@ -7,7 +7,7 @@ use core\Encrypt;
  * the token key saved in database. 
  * --- Ikechukwu Vincent[Principal Backend Dev] 21-21-07
  */
-class CallKey{
+class CallKeyFromDB{
   public static function getAPIkeyFromDB(){
     $model = new Model('cryp');
     $encryptedKey =$model->find(['conditions' => 'id = ?','bind' => [1]]);
