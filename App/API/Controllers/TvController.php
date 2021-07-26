@@ -15,7 +15,7 @@ use core\Call\Utility\TVcalls;
 use core\Call\Utility\AirtimeCall;
 
 
-class SpendController extends Controller {
+class TvController extends Controller {
   private $db,$model,$resp, $middleware,$airtime, $input,$indexMiddleware, $TVuser,$fh;
   
   public function __construct($controller, $action){
@@ -107,42 +107,9 @@ class SpendController extends Controller {
   }
 
 
-  public function airtimeAction(){
-    if(!$this->input->isPost()) return $this->resp->SendResponse(
-      403, false, POST_MSG);
-    if(!$this->indexMiddleware->isUser()) return $this->resp->SendResponse(
-      401, false, ACL_MSG);
-    $jsonData = file_get_contents('input://php');
-    $data = json_decode($jsonData);
-    $sanitized = FH::arraySanitize($data);
-    //prepare fields for initialization into the database 
-    $fields=[
-      'userid'=>$sanitized['userid'], 'phone'=>$sanitized['phone'],
-      'user_ref'=>$sanitized['user_ref'], 'amount'=>$sanitized['amount'],
-      'network'=>$sanitized['network']
-    ];
-    //compare with amount spendable
-    $fundModel = new Fund('user_fund');
-    $accbal = $fundModel->UserAaccBalance($this->indexMiddleware->loggedUser());
-    if($sanitized['amount']>=$accbal)return $this->resp->SendResponse(
-      422, false, 'Insufficient funds.');
-    //Initiate in database 
-    if(!$this->model->insert($fields)) return $this->resp->SendResponse(
-      500, false, 'There is a problem from our end. Please try again later.'
-    );
-    //API CALL
-    $airtimeRequest = $this->airtime->airtimeCall();
+ 
 
-    //handle error
 
-    //handle success and update database
-
-    //send final response
-  }
-
-  public function airtime_trx_statusAction(){
-
-  }
 
   public function buy_dataAction(){
     if(!$this->input->isPost())return $this->resp->SendResponse(
@@ -162,6 +129,8 @@ class SpendController extends Controller {
     ];
   }
 
+
+
   public function data_offersAction(){
     
   }
@@ -170,9 +139,6 @@ class SpendController extends Controller {
 
   }
 
-  public function dataAction(){
-
-  }
 
   public function insuranceAction(){
     
