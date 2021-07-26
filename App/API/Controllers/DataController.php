@@ -28,6 +28,29 @@ class DataController extends Controller{
     $this->datacall = new Datacall();   
   }
 
+  
+  public function buy_dataAction(){
+    if(!$this->input->isPost())return $this->resp->SendResponse(
+      403, false, POST_MSG);
+    if(!$this->indexMiddleware->isUser())return $this->resp->SendResponse(
+      401, false, ACL_MSG);
+    //handle inputs
+    $jsonData = file_get_contents('input://php');
+    $data = json_decode($jsonData);$sanitized = FH::arraySanitize($data);
+    //set fields 
+    $fields=[
+      'userid'=>$sanitized['userid'],
+      'network'=>$sanitized['network'],
+      'phone'=>$sanitized['phone'],
+      'amount'=>$sanitized['amount'],
+      ''
+    ];
+  }
+
+  
+  public function data_offersAction(){
+       
+  }
 
 
 }
