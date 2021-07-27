@@ -145,4 +145,4 @@ class InvestmentController extends Controller{
     
     
   }
-}
+}      

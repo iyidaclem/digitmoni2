@@ -1,7 +1,7 @@
 <?php
 namespace model;
 use database\DataBase;
-use model\Model;
+use core\Model;
 
 class Transactions{
  //declaring Transaction Model variables
