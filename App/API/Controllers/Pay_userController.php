@@ -14,8 +14,8 @@ use core\compensation\Interest;
 use PDO;
 use PDOException;
 
-class CompensateController extends Controller{
-  private $input, $model, $db, $response, $indexMiddleware, $middleware;
+class Pay_userController extends Controller{
+  private $input, $model, $db, $resp, $indexMiddleware, $middleware;
   
 
   public function __construct($controller, $action) {
@@ -23,21 +23,22 @@ class CompensateController extends Controller{
     $this->input = new Input();
     $this->model = new CoreModel('users');
     $this->db = new DataBase();
-    $this->response = new Response();
+    $this->resp = new Response();
     $this->indexMiddleware = $GLOBALS['indexMiddleware'];
   }
 
 
 public function testAction(){
   $interest = new Interest();
-  $interest->compundInterest(4,1000,8);
-  return $this->resp->SendResponse(200, true, 'interest result', false,$interest);
+ $compoundInt= $interest->compundInterestMonthly(4,1000,8);
+  return $this->resp->SendResponse(
+    200, true, 'interest result', false,round($compoundInt, 2));
 }
 
 public function test2Action(){
   $interest = new Interest();
-  $interest->compundTable(4,1000,8);
-  return $this->resp->SendResponse(200, true, 'interest result', false,$interest);
+  $numOfDays = $interest->daysOfInvestment('2021-02-01', '2021-02-28');
+  return $this->resp->SendResponse(200, true, 'interest result', false,$numOfDays);
 }
 
 

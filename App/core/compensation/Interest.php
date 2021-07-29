@@ -22,7 +22,7 @@ class Interest{
     
   }
 
-  public function compundInterest($_duration, $principal,$percentageRate){
+  public function compundInterestMonthly($_duration, $principal,$percentageRate){
     $rate = $percentageRate/100;
     $bracket = 1+$rate;
     $bracketPower3 = pow($bracket, $_duration);
@@ -32,49 +32,40 @@ class Interest{
     return $earned;
   }
 
-  public function compundTable($percentageRate, $_duration, $_principal){
-    $actualRate = $percentageRate/100;
-    $compoundMonths = [];
+  public function compoundInterestDaily($numberDays,$principal,$percentageRatePerMonth){
+    $dailyRateInPercentage = $this->ratePerDay($percentageRatePerMonth, $numberDays);
+    $compIntByDays = $this->compundInterestMonthly($numberDays, $principal, $dailyRateInPercentage);
+
+    $compIntByDays = round($compIntByDays, 2);
+    return $compIntByDays;
+  }
   
-    for ($i = 0; $i <= $_duration; $i++) {
-      $compoundMonths[]= $i;
-    }
-
-    $principal = [];
-    $earned = '';
-    $activePrincipal = $_principal;
-    $earnedInt[] =[];
-    foreach($compoundMonths as $month){
-      $earned += $activePrincipal * $actualRate;
-      $activePrincipal +=$earned;
-      $earnedInt[] = $earned;
-      $principal[] = $activePrincipal;
-    }
-
-    $compoundTable = array($compoundMonths,$earnedInt, $principal,);
-    return $compoundTable;
+  public function compundTable($percentageRate, $_duration, $_principal){
+   
   }
 
   public function daysOfInvestment($initialDate, $cancelDate){
     $investedOn = strtotime($initialDate);
     $cancelDate = strtotime($cancelDate);
-
     $timeDiff = abs($investedOn - $cancelDate);
 
     $numberDays = $timeDiff/86400;
-    return $numberDays;
+    return intval($numberDays);
   }
 
-  public function interestOnCancelDate(){
-    $investmentDaysOld = $this->daysOfInvestment($this->_initialDate, date("Y-n-j"));
-    
+  public function ratePerDay($monthlyRate, $numberDays){
+    $ratePerDay = $monthlyRate/$numberDays;
+    $ratePerDay = round($ratePerDay, 2);
+    return $ratePerDay;
   }
 
-  public function interest(){
-    $rate = $this->_rate/100;
-    $earned = $this->_principal * $rate;
-    return $earned;
+  public function interest($monthlyPercentageRage, $principal, $numOfMonths){
+    $rate = $monthlyPercentageRage/100;
+    $earned = $principal * $rate;
+    $interestOverTime = round(($numOfMonths * $earned), 2);
+    return $interestOverTime;
   }
+
 
 
 }

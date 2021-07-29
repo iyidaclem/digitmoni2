@@ -6,7 +6,7 @@ class Router{
   private $_server;
 
   public static function route($url) {
-
+  
     //controller
     $controller = (isset($url[0]) && $url[0] != '') ? ucwords($url[0]).'Controller' : DEFAULT_CONTROLLER.'Controller';
     $controller_name = str_replace('Controller','',$controller);
@@ -19,10 +19,6 @@ class Router{
 
     //acl check
    // $grantAccess = self::hasAccess($controller_name, $action_name);
-
-    print($controller);
-    print($action);
-    die();
     //params
     $queryParams = $url;
     $controller = 'API\Controllers\\' . $controller;
@@ -45,12 +41,6 @@ class Router{
     $current_user_acls = ['member'];
     $grantAccess = false;
 
-    if(Session::exists($token)){
-      $current_user_acl[] = "loggedin";
-      foreach(User::currentUser()->acls() as $a){
-        $current_user_acl[] =$a;
-      }
-    }
 
     //checking for where he has access 
 

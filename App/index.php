@@ -26,13 +26,16 @@ function autoload($className){
 spl_autoload_register('autoload');
 
 $url = isset($_SERVER['PATH_INFO'])? explode('/', ltrim($_SERVER['PATH_INFO'], '/')):[];
-var_dump($url);die;
 
 if(array_key_exists('HTTP_AUTHORIZATION',$_SERVER)){
   //$aclUsername = $middleware->getACL_Username($_SERVER['HTTP_AUTHORIZATION']);
   //$GLOBALS['indexMiddleware']->dump();
-  $GLOBALS['indexMiddleware'] =$middleware = new IndexMiddleware();
+ $userCred =$middleware = new IndexMiddleware();
+}else{
+  $userCred = null;
 }
+
+$GLOBALS['indexMiddleware'] = $userCred;
 //DEFINE ROUTES OR CONTROLLERS THAT DOESNT NEED AUTHENTICATION TOKEN
 // var_dump($url);die();
 
