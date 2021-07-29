@@ -12,6 +12,7 @@ use core\Response;
 use database\DataBase;
 use PDO;
 use PDOException;
+use core\compensation\Interest;
 
 class HomeController extends Controller{
   private $input, $model, $db, $response, $indexMiddleware, $middleware;
@@ -26,6 +27,18 @@ class HomeController extends Controller{
     $this->indexMiddleware = $GLOBALS['indexMiddleware'];
   }
 
+  public function interest_testingAction(){
+    $interest = new Interest();
+    $interest->compundInterest(4,1000,8);
+    return $this->resp->SendResponse(200, true, 'interest result', false,$interest);
+  }
+  
+  public function test2Action(){
+    $interest = new Interest();
+    $interest->compundTable(4,1000,8);
+    return $this->resp->SendResponse(200, true, 'interest result', false,$interest);
+  }
+  
 
   public function referenceAction(){
     

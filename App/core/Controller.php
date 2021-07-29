@@ -5,14 +5,14 @@ use core\Application;
 
 class Controller extends Application{
   protected $_controller, $_action;
-  public $view, $request;
+  public $request;
   
   public function __construct($controller, $action){
     //call the parent Application
     $this->_controller = $controller;
     $this->_action = $action;
     $this->request = new Input();
-    $this->view = new View();
+    // $this->view = new View();
   }
 
   protected function laod_model($model){

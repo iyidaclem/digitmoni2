@@ -1,14 +1,12 @@
 <?php
 namespace core;
 use core\User;
-
+use core\Response;
 class Router{
   private $_server;
+
   public static function route($url) {
 
-    // $server= $_SERVER['HTTP_AUTHORIZATION'];
-    // print($server);
-    // die();
     //controller
     $controller = (isset($url[0]) && $url[0] != '') ? ucwords($url[0]).'Controller' : DEFAULT_CONTROLLER.'Controller';
     $controller_name = str_replace('Controller','',$controller);
@@ -20,26 +18,23 @@ class Router{
     array_shift($url);
 
     //acl check
-    $grantAccess = self::hasAccess($controller_name, $action_name);
+   // $grantAccess = self::hasAccess($controller_name, $action_name);
 
-    if(!$grantAccess) {
-      $controller = ACCESS_RESTRICTED.'Controller';
-      $controller_name = ACCESS_RESTRICTED;
-      $action = 'indexAction';
-    }
-
+    print($controller);
+    print($action);
+    die();
     //params
     $queryParams = $url;
     $controller = 'API\Controllers\\' . $controller;
-    //var_dump($controller);die();
     $dispatch = new $controller($controller_name, $action);
 
     if(method_exists($controller, $action)) {
+      //var_dump($controller); var_dump($action);die;
       call_user_func_array([$dispatch, $action], $queryParams);
     } else {
       //die('That method does not exist in the controller \"' . $controller_name . '\"');
-      $render = new View();
-      $UnkownPage = $render->render('error/index');
+      $resp = new Response();
+      $UnkownPage = $resp->SendResponse(400, false,'Unknown Action', false, []);
     }
   }
 

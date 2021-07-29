@@ -19,30 +19,30 @@ class Interest{
   }
   
   public function getRules(){
-
+    
   }
 
-  public function compundInterest(){
-    $rate = $this->_rate/100;
+  public function compundInterest($_duration, $principal,$percentageRate){
+    $rate = $percentageRate/100;
     $bracket = 1+$rate;
-    $bracketPower3 = pow($bracket, $this->_duration);
+    $bracketPower3 = pow($bracket, $_duration);
 
-    $earned = $this->_principal* $bracketPower3;
+    $earned = $principal* $bracketPower3;
 
     return $earned;
   }
 
-  public function compundTable(){
-    $actualRate = $this->_rate/100;
+  public function compundTable($percentageRate, $_duration, $_principal){
+    $actualRate = $percentageRate/100;
     $compoundMonths = [];
   
-    for ($i = 0; $i <= $this->_duration; $i++) {
+    for ($i = 0; $i <= $_duration; $i++) {
       $compoundMonths[]= $i;
     }
 
     $principal = [];
     $earned = '';
-    $activePrincipal = $this->_principal;
+    $activePrincipal = $_principal;
     $earnedInt[] =[];
     foreach($compoundMonths as $month){
       $earned += $activePrincipal * $actualRate;
