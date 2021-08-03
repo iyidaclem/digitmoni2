@@ -64,9 +64,12 @@ class ElectricityController extends Controller{
     401,false, POST_MSG);
   if(!$this->indexMiddleware->isUser()) return $this->resp->SendResponse(
     403,false, ACL_MSG);
+  //generate unique transaction ID
+    $ref = $this->middleware->generateRandomString(12);
   //prepare inputs
   $fields =[
     'username'=>$this->indexMiddleware->loggedUser(),
+    'reference'=>$ref,
     'sys_userid'=>FH::sanitize($_REQUEST['userid']),
     'sys_user_ref'=>FH::sanitize($_REQUEST['user_ref']),
     'service'=>FH::sanitize($_REQUEST['service']),
@@ -91,7 +94,10 @@ class ElectricityController extends Controller{
   //GET LAST INSERT ID
   $lastInsertID = $electricModel->lastIDinserted();
   //MAKE API CALL 
-  $payElectricBillRequest = $this->electricityCall->payCall();
+  $payElectricBillRequest = $this->electricityCall->payCall(
+    $ref, $_REQUEST['service'],
+    $_REQUEST['mtype'], $_REQUEST['meterno'],
+    $_REQUEST['amount']);
   if(!$payElectricBillRequest) return $this->resp->SendResponse(500, 
   false, 'Service curretly unavailable.', false, []);
   //update the database to COMPLETED transactions

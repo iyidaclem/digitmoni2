@@ -28,17 +28,6 @@ class AirtimeController extends Controller{
     $this->airtime = new AirtimeCall();
   }
 
-  public function airtime_offerAction(){
-    if(!$this->input->isGet())return $this->resp->SendResponse(
-      403, false, GET_MSG);
-    if(!$this->indexMiddleware->isUser) return $this->resp->SendResponse(
-      402, false, ACL_MSG);
-    //API call 
-    $airtimeOfferRequest = $this->airtime->airtimeOfferRequest();
-    if(!$airtimeOfferRequest) return $this->resp->SendResponse(
-      200, true, 'Network not available.');
-    return $this->resp->SendResponse(200, true, 'Network available.', $airtimeOfferRequest);
-  }
 
   public function airtimeAction(){
     if(!$this->input->isPost()) return $this->resp->SendResponse(
