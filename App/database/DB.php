@@ -1,4 +1,8 @@
 <?php 
+namespace database;
+
+use PDO;
+use PDOException;
 
 class DB{
 	private $_tableName;

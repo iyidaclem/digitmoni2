@@ -10,7 +10,7 @@ class AirtimeCall{
   private $ourID;
   public function __construct(){
     $callCredentials = new CallKeyFromDB();
-    $cred = $callCredentials->getAPIkeyFromDB();
+    $cred = $callCredentials->getUtilitykeyFromDB();
     $this->theKey = $cred[0];
     $this->ourID = $cred[1];
   }

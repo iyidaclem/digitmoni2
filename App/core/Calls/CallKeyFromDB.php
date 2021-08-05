@@ -15,9 +15,21 @@ class CallKeyFromDB{
     $this->model = new Model('cryp_tb');
   }
 
-  public static function getAPIkeyFromDB(){
+  public static function getInvestmentkeyFromDB(){
     $model = new Model('cryp_tb');
     $details = $model->findFirst(['conditions' => 'id = ?','bind' => [1]]);
+    if(!$details) //HIGH PRIORITY ERROR LOG
+     return false;
+     $credentials = [];
+     $credentials['key'] = Encrypt::__decrypt($details->enc_key);
+     $credentials['ourID'] = $details->ourID;
+    return $credentials;
+  }
+
+
+  public static function getUtilitykeyFromDB(){
+    $model = new Model('cryp_tb');
+    $details = $model->findFirst(['conditions' => 'id = ?','bind' => [2]]);
     if(!$details) //HIGH PRIORITY ERROR LOG
      return false;
      $credentials = [];
