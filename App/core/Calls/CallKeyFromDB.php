@@ -4,7 +4,7 @@ use core\Model;
 use core\Encrypt;
 /**
  * This class and associated method when called get's 
- * the token key saved in database. 
+ * the token key saved in database and also the ID where applicable. 
  * --- Ikechukwu Vincent[Principal Backend Dev] 21-21-07
  */
 class CallKeyFromDB{

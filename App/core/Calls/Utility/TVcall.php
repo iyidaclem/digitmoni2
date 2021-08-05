@@ -17,21 +17,18 @@ class TVcalls{
   }
 
 
-  public function validateTVUser($userid,$bill,$pass, $cardNo){
-   
+  public function validateTVUser($bill, $cardNo){
+    $response = Requests::get("https://mobileairtimeng.com/httpapi/customercheck?userid=$this->ourID&pass=$this->theKey&bill=$bill&smartno=$cardNo");
     return $response;
   }
   
-  
-  public function starTimeCall(){
+ public function gotv_dstvRecharge($phone, $smartcardNo,$amount, $customer, $invoice, $billtype, $customerNumber){
+   $response = Requests::get("https://mobileairtimeng.com/httpapi/multichoice?userid=$this->ourID&pass=$this->theKey&phone=$phone&amt=$amount&smartno=$smartcardNo&customer=$customer&invoice=$invoice&billtype=$billtype&customernumber=$customerNumber");
+   return $response;
+ }
 
-  }
-
-  public function dstv(){
-
-  }
-
-  public function gotv(){
-
-  }
+ public function starTimeRecharge($ourID, $pass, $amount, $phone, $smartcardNo, $ref){
+  $response = Requests::get("https://mobileairtimeng.com/httpapi/startimes?$ourID=xxx&$pass=xxx&phone=$phone&amt=$amount&smartno=$smartcardNo&user_ref=$ref");
+  return $response;
+ }
 }

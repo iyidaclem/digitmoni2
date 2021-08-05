@@ -4,14 +4,14 @@ use core\Response;
 
 class Help{
     
-  function Unique_Id_Gen($for, $digit = null){
+  public function Unique_Id_Gen($for, $digit = null){
     is_null($digit) == false? $length = $digit: $length = 10;
     $result = bin2hex(random_bytes($length));
     return $for.$result;
   }
 
 
-  function content_type(){
+  public function content_type(){
     if($_SERVER['CONTENT_TYPE'] !== 'application/json'){
       $response = new Response();
       $response->SendResponse(400, false, "Content type header is not set to json");
@@ -19,7 +19,7 @@ class Help{
   }
 
 
-  function checkValidJson($rawPostData){
+  public function checkValidJson($rawPostData){
     $jsonData = json_decode($rawPostData);
     if(!$jsonData){
       $response = new Response();
@@ -27,6 +27,10 @@ class Help{
     }else{
       return $jsonData;
     }
+  }
+
+  public function dateTimeNow(){
+    return date('Y-m-d h:i:s a', time());
   }
 
 }
