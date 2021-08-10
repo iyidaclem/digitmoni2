@@ -112,15 +112,20 @@ class UserInvestment extends Model{
   }
 
   /**
+   * This investment returns due investment for a given date. It will be used by or called by the laravery event runner
+   * and the its output will be passed to to function that will map interest calculation function to it.
    * 
-   * @param string $rollover
+   * 
+   * @param string $rollover - this will be "yes" or "no"
+   * yes- to fetch due investments where rollover is applied - where compound interest will be applied
+   * no - to fetch due investment where rollover is not applied. 
    * 
    * @return [type]
    */
   public function dueInvestment($rollover){
     $todayDate = date('Y-m-d');
     //$readDB = DB::connectReadDB();
-    $query = $this->readDB->prepare("SELECT amount, interest from 
+    $query = $this->readDB->prepare("SELECT username,inv_reference, amount, interest from 
     user_investments where rollover=:rollover and matures_at =:today");
     $query->bindParam(':rollover', $rollover, PDO::PARAM_STR);
     $query->bindParam(':today', $todayDate, PDO::PARAM_STR);
@@ -130,9 +135,9 @@ class UserInvestment extends Model{
     $dueInvestmentDetail = $query->fetchAll(PDO::FETCH_OBJ);
 
     return $dueInvestmentDetail;
-       
-    //return $investments;
   }
+
+
 
 
 }

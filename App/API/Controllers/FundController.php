@@ -49,11 +49,7 @@ class FundController extends Controller{
     $balance = $fund->balance;
     return $this->response->SendResponse(200, true, null, false, $balance);
   }
-/**
- * 
- * 
- * 
- */
+
   public function fundAction(){
     //make sure it is post request 
     if(!$this->input->isPost()) return $this->response->SendResponse(

@@ -34,6 +34,19 @@ class Fund extends Model{
     ]);
   }
 
+  /**
+   * This method is called when there is need to update the user account balance e.g 
+   * during account funding process and during interest payout. So those two processes will
+   * be using or calling this method.
+   * 
+   * @param mixed $targetUser - this is the username whose account balance needs to be increamented
+   * 
+   * @param mixed $addedAmt - this is the amount being added.
+   * @param mixed $userID - this is the userID of the user which will be used by the update method.
+   * 
+   * @return bool - the method returns bool value of "true" when the account bal update is successful 
+   * and returns false when it false
+   */
   public function updateUserAccountBalance($targetUser, $addedAmt, $userID){
     //get user's accout balance
     $accBal = intval($this->UserAaccBalance($targetUser));
