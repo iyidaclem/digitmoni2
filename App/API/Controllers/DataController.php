@@ -48,8 +48,20 @@ class DataController extends Controller{
   }
 
   
-  public function data_offersAction(){
-       
+  /**
+   * To get a list 
+   * 
+   * @param mixed $network
+   * 
+   * @return [type]
+   */
+
+  public function data_offersAction($network){
+    if(!$this->input->isGet())return $this->resp->SendResponse(
+      403, false, POST_MSG);
+    if(!$this->indexMiddleware->isUser())return $this->resp->SendResponse(
+      401, false, ACL_MSG);
+    
   }
 
 
