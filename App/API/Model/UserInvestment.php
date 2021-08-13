@@ -6,23 +6,42 @@ use database\DB;
 use DateTime;
 use core\Helper\Help;
 use PDO;
+use PDOException;
+use core\compensation\Interest;
+use API\Model\Fund;
+use core\Helper;
 /**
  * This class is a model and extension of main model that is meant to handle
  * handle everything about querying the database about user investment. Think 
  * of it as the model for the table "user_investment". 
  * 
+ * This is arguably the longest file in this application. Thread with caution, as 
+ * things can get confusing and messing up anything will lead to loss of money,perhaps
+ * to the company. All interest calculations and payout took place in this file. 
+ * This is part of why I took my time to document each method in this file. You are better off 
+ * taking a week to read the doc and study the methods than saving a week and lose your few 
+ * months salary.
+ * 
  * @param string $table is the parameter every instance of this model class will 
  * take. In this case it is the "user_investment" table.
  */
 class UserInvestment extends Model{
-  private $model, $readDB, $writeDB, $help;
+  private $model, $readDB, $writeDB, $help, $compensate, $fundModel;
+  /**
+   * 
+   * 
+   * @param mixed $table
+   */
   public function __construct($table){
     parent::__construct($table);
-    $this->model = new Model('user_investment');
+    $this->model = new Model('user_investments');
     $this->readDB = DB::connectReadDB();
     $this->writeDB = DB::connectWriteDB();
     $this->help = new Help();
+    $this->compensate = new Interest();
+    $this->fundModel = new Fund('user_fund');
   }
+
 
   /**
    * This method is meant to retrieve the rules about a particular user investment.
@@ -120,23 +139,229 @@ class UserInvestment extends Model{
    * yes- to fetch due investments where rollover is applied - where compound interest will be applied
    * no - to fetch due investment where rollover is not applied. 
    * 
-   * @return [type]
+   * false- this method returns false when the fields are empty.
+   * @return mixed returns details username, inv_reference, next_date, amount, interest, duration
    */
-  public function dueInvestment($rollover){
-    $todayDate = date('Y-m-d');
-    //$readDB = DB::connectReadDB();
-    $query = $this->readDB->prepare("SELECT username,inv_reference, amount, interest from 
-    user_investments where rollover=:rollover and matures_at =:today");
-    $query->bindParam(':rollover', $rollover, PDO::PARAM_STR);
-    $query->bindParam(':today', $todayDate, PDO::PARAM_STR);
-    $query->execute();
-    $rowCount = $query->rowCount();
-    if($rowCount===0) return false;
-    $dueInvestmentDetail = $query->fetchAll(PDO::FETCH_OBJ);
-
+  
+   public function dueInvestment($rollover){
+    // $todayDate = date('Y-m-d');
+    $todayDate = '2021-12-10';
+    $readDB = DB::connectReadDB();
+    
+    try {
+      $query = $readDB->prepare("SELECT username,inv_reference, DATE(next_date), amount, interest, duration from user_investments where rollover=:rollover and DATE(matures_at) =DATE(:today)");
+      $query->bindParam(':rollover', $rollover, PDO::PARAM_STR);
+      $query->bindParam(':today', $todayDate, PDO::PARAM_STR);
+      $query->execute();
+      $rowCount = $query->rowCount();
+      
+      // if($rowCount===0) return false;
+      $dueInvestmentDetail = $query->fetchAll(PDO::FETCH_OBJ);
+    } catch (PDOException $th) {
+    
+    }
     return $dueInvestmentDetail;
   }
 
+  /**
+   * This method is merely a sort of helper function. It takes the investor's username
+   * and return's his/her ID. This method will be used by other methods in this same class.
+   * 
+   * @param mixed $username target user's username; 
+   * 
+   * @return false returns false if it cant find an investor with given username. 
+   * @return $userID, this is the user/investor's ID 
+   */
+  public function investorID($username){
+    //Declaring database instance
+    $readDB = DB::connectReadDB();
+    //writing query to getusername
+    $query = $readDB->prepare("SELECT id FROM users WHERE username=:username");
+    $query->bindParam(":username", $username, PDO::PARAM_STR);
+    $rowCount = $query->rowCount();
+    if($rowCount===0) return false;
+    $userID = $query->fetch(PDO::FETCH_OBJ);
+    return $userID;
+  } 
+
+  /**
+   * This method will be used by the Lavary Crunz event runner to compute and pay interest to 
+   * investors whose rollover is active(investment is compounding.). 
+   * 
+   * @return null this function returns nothing. It does its job and log it and also log wherever 
+   * it fails. 
+   */
+  public function computeInterestAndPayCompoundInt(){
+    $dueInvestmentDetails = $this->dueInvestment("yes");
+    foreach($dueInvestmentDetails as $dueInvestment){
+      $interest = $dueInvestment->interest;
+      $amount = $dueInvestment->amount;
+      $duration=  $dueInvestment->duration;
+      $username = $dueInvestment->username;
+      $userID = $this->investorID($username);
+      //number of days still need to be taken care of
+      $numberOfDays = $dueInvestment->created_at;
+
+      try{
+        $compoundInterestEarned = $this->compensate->compoundInterestMonthly($numberOfDays, $amount,$interest);
+        $this->fundModel->updateUserAccountBalance($username, $compoundInterestEarned, $userID);
+        $array = array();
+        $array['compound_interest'] = $compoundInterestEarned;
+        $array['username']= $username;
+        $array['investor_ID'] = $userID;
+        $array['duration'] = $duration;
+      }catch(PDOException $err){
+
+      }
+    }
+  }
+
+  /**
+   * This function computes and pay simple interest rate. It is used by Lavary Crunz event 
+   * runner for monthly payment to pay investors whose investment isnt compounding(rollover is inactive). 
+   * 
+   * It takes no parameter or or variable. it rather calls another method in this class and uses the 
+   * variables returned. 
+   * 
+   * This function also returns nothing. It does its job and logs it and loggs it too when it fails.
+   * @return [type]
+   */
+  public function computeAndPaySimpleInterest(){
+    $dueInvestmentDetails = $this->dueInvestment('no');
+    foreach($dueInvestmentDetails as $dueInvestment){
+      $interest = $dueInvestment->interest;
+      $amount = $dueInvestment->amount;
+      $duration=  $dueInvestment->duration;
+      $username = $dueInvestment->username;
+      $userID = $this->investorID($username);
+      //number of days still need to be taken care of
+      $numberOfDays = $dueInvestment->created_at;
+
+      try{
+        $simpleInteretEarned = $this->compensate->interest($interest, $amount,1);
+        $updateAccBalWithInterest = $this->fundModel->updateUserAccountBalance($username, $simpleInteretEarned, $userID);
+        //if(!$updateAccBalWithInterest) Logg something
+        $array = array();
+        $array['compound_interest'] = $simpleInteretEarned;
+        $array['username']= $username;
+        $array['investor_ID'] = $userID;
+        $array['duration'] = $duration;
+      }catch(PDOException $err){
+        
+      }
+    }
+  }
+
+  /**
+   * This method gets the relevant details of any investment the user wants to cancel, details like
+   * amount, created_at, cancel_cost, interest, next_date. 
+   * 
+   * It takes the following parameters:
+   * @param mixed $userInvestmentID - There exact ID of the investment to be cancelled.
+   * @param mixed $username - The username of the investor who wants to cancel investment
+   * 
+   *  this method returns empty array if nothing was found.
+   * returns object containining the data already spacified. 
+   * 
+   * 
+   */
+
+  public function CancelledInvestmentDetail($userInvestmentID, $username, $rollover){
+    $readDB = DB::connectReadDB();
+
+    $query = $readDB->prepare("SELECT amount, created_at, cancel_cost, 
+          interest, next_date FROM user_investments, investments WHERE username=:username and user_investments.id=:id and 
+          investments.id =user_investments.investmentID and rollover=:rollover");
+    $query->bindParam(':id',$userInvestmentID, PDO::PARAM_INT);
+    $query->bindParam(':username', $username, PDO::PARAM_STR);
+    $query->bindParam(':rollover', $rollover, PDO::PARAM_STR);
+    $query->execute();
+    $emptyArr = array();
+    $rowCount = $query->rowCount();
+    if($rowCount===0) return false; 
+
+    $userInvestmentDetail = $query->fetch(PDO::FETCH_OBJ);
+    return $userInvestmentDetail;
+  }
+
+  /**
+   * This method handles paying of investors who wants to cancel investment where rollover 
+   * is not active. It calculates their interest since the last payout, add it to the principal, 
+   * substract cancel cost from that and payout the remaining to the investor. 
+   * 
+   * @param mixed $userInvestmentID the exact ID of the investment the investor wants to cancel.
+   * @param mixed $username the username of the investor who wants cancel his investment.
+   * 
+   * @return bool - returns true or false on successful or failed payout respectively.
+   */
+  public function payCancellationNoRollover($userInvestmentID, $username){
+    $InvCancellationDetail = $this->CancelledInvestmentDetail($userInvestmentID, $username, "no");
+    //extracting and declaring variables
+    $amount = $InvCancellationDetail->amount;
+    $interestPerMonth = $InvCancellationDetail->interest;
+    $creationDate = $InvCancellationDetail->created_at;
+    $cancel_CostPercentage = $InvCancellationDetail->cancel_cost;
+    $next_date = $InvCancellationDetail->next_date;
+    // $username = $InvCancellationDetail->username;
+    //calculate number of days the investment have lasted
+    $numberOfDays = $this->help->dateDiffInDays($next_date, date('Y-m-d'));
+    $months = round(($numberOfDays/30), 2);
+    
+    //calaculate interest pay day
+    $simpleInteretEarned = $this->compensate->interest($interestPerMonth, $amount,$months);
+    
+    $dueAmount = ($simpleInteretEarned+$amount);
+    $deductible = $this->compensate->percentageOfAmount($cancel_CostPercentage, $dueAmount);
+    $payable = round($dueAmount-$deductible, 2);
+    //pay this amount of interest considering rollover
+    $userID = $this->investorID($username);
+    $updateAccBalWithInterest = $this->fundModel->updateUserAccountBalance($username, $payable,$userID);
+    if(!$updateAccBalWithInterest){
+      //LOGG SOME FUCKING ERROR
+      //RETURN FALSE
+    }
+    //LOG SOME BAD ASS SOMETHING
+    return true;
+  }
+
+  /**
+   * This method handles refunding people who wants to cancel their investment, in 
+   * a case where the said investment is a compounding one with rollover active. The method
+   * calculates interest earned, adds it to the principal and substract cancellation cost from that 
+   * to get the exact amount to pay the investor.
+   * 
+   * @param int $userInvestmentID This is the exact ID of the investment the user wants to cancel.
+   * @param string $username this is the username of the investor who wants out/to cancel.
+   * 
+   * @return bool true or false on successfull or failed payout as the case maybe.
+   */
+  public function payCancellationOnRollOver($userInvestmentID, $username){
+    $InvCancellationDetail = $this->CancelledInvestmentDetail($userInvestmentID, $username, "yes");
+    //extracting and declaring variables
+    $amount = $InvCancellationDetail->amount;
+    $interestPerMonth = $InvCancellationDetail->interest;
+    $creationDate = $InvCancellationDetail->created_at;
+    $cancel_Cost = $InvCancellationDetail->cancel_cost;
+    $next_date = $InvCancellationDetail->next_date;
+    $username = $InvCancellationDetail->username;
+
+    //calculate number of days investment have lasted
+    $numberOfDays = $this->help->dateDiffInDays($creationDate, date('Y-m-d'));
+    
+    //calculate interest earned
+    $compoundIntEarned = $this->compensate->compoundInterestDaily($numberOfDays, $amount, $interestPerMonth);
+    $dueAmount = ($compoundIntEarned + $amount); 
+    $deductible = $this->compensate->percentageOfAmount($cancel_Cost, $dueAmount);
+    $payable = round($dueAmount-$deductible, 2);
+    $userID = $this->investorID($username);
+    $updateAccBalWithInterest = $this->fundModel->updateUserAccountBalance($username, $payable,$userID);
+    if(!$updateAccBalWithInterest){
+      //LOGG SOME FUCKING ERROR
+      //RETURN FALSE
+    }
+    //LOG SOME BAD ASS SOMETHING
+    return true;
+  }
 
 
 

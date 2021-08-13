@@ -28,11 +28,19 @@ class TestController extends Controller{
     $this->userInvModel = new UserInvestment('user_investments');
   }
 
+  /**
+   * 
+   * 
+   * 
+   * @return [type]
+   */
   public function due_investment_testAction(){
     $data = $this->userInvModel->dueInvestment('yes');
     var_dump($data);die();
     return $this->response->SendResponse(200, true, '', false, $data);
   }
+
+  
 
 
 

@@ -22,7 +22,7 @@ class Interest{
     
   }
 
-  public function compundInterestMonthly($_duration, $principal,$percentageRate){
+  public function compoundInterestMonthly($_duration, $principal,$percentageRate){
     $rate = $percentageRate/100;
     $bracket = 1+$rate;
     $bracketPower3 = pow($bracket, $_duration);
@@ -34,7 +34,7 @@ class Interest{
 
   public function compoundInterestDaily($numberDays,$principal,$percentageRatePerMonth){
     $dailyRateInPercentage = $this->ratePerDay($percentageRatePerMonth, $numberDays);
-    $compIntByDays = $this->compundInterestMonthly($numberDays, $principal, $dailyRateInPercentage);
+    $compIntByDays = $this->compoundInterestMonthly($numberDays, $principal, $dailyRateInPercentage);
 
     $compIntByDays = round($compIntByDays, 2);
     return $compIntByDays;
@@ -66,6 +66,13 @@ class Interest{
     return $interestOverTime;
   }
 
+  public function simpleInterestInDays(){
 
+  }
+
+  public function percentageOfAmount($percentage, $amount){
+    $percentageOfAmount =($percentage/100) * $amount;
+    return round($percentageOfAmount, 2);
+  }
 
 }
