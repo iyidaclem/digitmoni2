@@ -4,23 +4,18 @@ namespace API\Controllers;
 use API\Model\Fund;
 use core\Controller;
 use core\Input;
-use API\Model\Users;
 use core\FH;
 use core\http\Middleware\Middleware;
-use core\Model as CoreModel;
+use API\Model\DataModel;
 use core\Response;
-use core\Call\Utility\
-use core\http\Middleware\IndexMiddleware;
 use core\Call\Utility\Datacall;
 use core\Helper\Help;
 
 class DataController extends Controller{
-  private $db,$help, $model,$resp, $resp,$middleware,$airtime, $input,$indexMiddleware, $TVuser,$fh;
+  private $help, $dataModel,$resp,$middleware,$datacall, $input,$indexMiddleware, $TVuser,$fh;
   
   public function __construct($controller, $action){
     parent::__construct($controller, $action);
-    $this->db = new DataBase();
-    $this->model = new coreModel($this->tabl);
     $this->middleware = new Middleware();
     $this->fh = new FH();
     $this->input = new Input();
@@ -28,7 +23,8 @@ class DataController extends Controller{
     $this->resp = new Response;
     $this->help = new Help();
     $this->datacall = new Datacall();   
-    $this->resp = new Response();
+    $this->dataModel = new DataModel('data');
+    //$this-> 
   }
 
   
@@ -62,12 +58,23 @@ class DataController extends Controller{
     $fields=[
       'username'=>$username,
       'network'=>$sanitized['network'],
+      'data_pack'=>$sanitized['pack'],
       'phone'=>$sanitized['phone'],
       'amount'=>$sanitized['amount'],
       'ref'=>$ref,
       'status'=>'initiated'
     ];
+    //compare amount to account balance 
     //
+    //instantiating transaction in database
+    $dataBaseInstance = $this->dataModel->insert($fields);
+    if(!$dataBaseInstance) //LOG ERROR
+    return $this->resp->SendResponse(500, false, "There is a problem from our end. Service currently not available.");
+    //make the API call
+    $purchaseDataRequest = $this->datacall
+    ->dataTopUpCall($sanitized['amount'], $sanitized['network'], $sanitized['phone']);
+    //send final response
+    return $this->resp->SendResponse(200, false, '', false, $purchaseDataRequest);
   }
 
   
@@ -77,7 +84,7 @@ class DataController extends Controller{
    * 
    * 
    * 
-   * @param mixed $network
+   * @param mixed $network - mtn, airtel, glo
    * 
    * @return [type]
    */
@@ -88,8 +95,9 @@ class DataController extends Controller{
     if(!$this->indexMiddleware->isUser())return $this->resp->SendResponse(
       401, false, ACL_MSG);
     //api call 
-    $availableData = $this->datac
-    //$this->resp->SendResponse();
+    $availableData = $this->datacall->dataOptionsCall($network);
+    // send response
+    return $this->resp->SendResponse(200,true, '', false, $availableData);
   }
 
 
