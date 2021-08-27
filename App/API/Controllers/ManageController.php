@@ -13,7 +13,12 @@ use database\DataBase;
 use PHPMailer\PHPMailer;
 use PDO;
 
-class Manage extends Controller{
+/**
+ * This class ManageController holds features like managing a users account. Features like
+ * resolving forgotten password, resetting password, deleted account, resides here.
+ * 
+ */
+class ManageController extends Controller{
   private $input;
   private $model;
   private $db;
@@ -31,6 +36,17 @@ class Manage extends Controller{
     $this->middleware = new Middleware();
   }
 
+  /**
+   * This endpoint is for resolving forgotten password. You will need to submit user email
+   * in json format to this endpoint. Make a POST request to ...app/manage/forgot_password. 
+   * 
+   * POSSIBLE RESPONSES FROM THIS END POINT
+   * 
+   * 1. Returns 404 with "No user with given email" message.
+   * 
+   * 2. Return 200 with success message. That means user can no go check their email.
+   * @return [type]
+   */
   public function forgot_passwordAction(){
     //making sure it is a get Post request 
     if(!$this->input->isPost()) return $this->response->SendResponse(
@@ -44,7 +60,7 @@ class Manage extends Controller{
     $this->table = 'users';
     $UserWithEmail = $this->model->findByEmail('users', $email);
     if(!$UserWithEmail) return $this->response->SendResponse(
-      400, false , 'There is no user with this email.'
+      404, false , 'There is no user with this email.'
     );
     //generate new password
     $newPassword = md5($this->middleware->rand6());
@@ -66,6 +82,11 @@ class Manage extends Controller{
     );
   }
 
+  /**
+   * This endpoint ...app/manage/change_password is special in the sense that it is made for both super admin
+   * and normal users. A user can use it to reset thier password and a super admin can use it to reset user password
+   * @return [type]
+   */
   public function change_passwordAction(){
     //check the request type 
     if(!$this->input->isPost())return $this->response->SendResponse(

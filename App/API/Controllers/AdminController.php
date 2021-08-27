@@ -308,9 +308,9 @@ class AdminController extends Controller{
       'display'=>$display
     ];
     //select last inserted ie one with highest ID
-    $targetID = '';
+    $ID = '';
     //update the database to display or hide
-    $announce = $this->model->update($targetID, $fields);
+    $announce = $this->model->update($ID, $fields);
     if(!$announce) //LOG ERROR
     return $this->response->SendResponse(400, false, 'Failed in making annoucement public.');
     //sending true or success response

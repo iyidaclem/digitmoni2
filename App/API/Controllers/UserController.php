@@ -29,7 +29,22 @@ class UserController extends Controller{
 
   }
 
-  //this index action will view the current users profile and or that of any supplied id
+
+  /**
+   * This endpoint(GET REQUEST) ...app/user/profile{username=null} when called returns a user's profile info. 
+   * 
+   * @param mixed $username=null it takes a username or nothing. You can use it with a username to add feature 
+   * for admin wanting to view a users profile. No username supplied for when a user wants to view his or her 
+   * own profile. 
+   * 
+   * POSSIBLE RESPONSES 
+   * 
+   * 1. Returns 404 with a 'problem' message.
+   * 
+   * 2. Returns profile data in json format.
+   * 
+   * @return [type]
+   */
   public function profileAction($username=null){
     if(!$this->input->isGet()) return $this->response->SendResponse(
       400, false, POST_MSG
@@ -53,6 +68,21 @@ class UserController extends Controller{
 
 
 
+  /**
+   * The same thing that happened in fetching profile data is happening here except that this 
+   * time around we use userID. You dont need to supply ID to this endpoint when using it for a user 
+   * updating their profile. 
+   * 
+   * to call this endpoint, make a PUT REQUEST to ...app/user/update/{userID=null}
+   * 
+   * @param mixed $targetID=null
+   * 
+   * POSSIBLE RESPONSES 
+   * 
+   * 1. 500 with a "failed to update" message.
+   * 
+   * 2. 200 with success message.
+   */
   public function updateAction($targetID=null){
     if(!$this->input->isPut()) return $this->response->SendResponse(
       401, false, 'Wrong request method.'
@@ -94,40 +124,37 @@ class UserController extends Controller{
       'acc_type'=>$sanitized['acc_type'],
       'activity'=>$sanitized['activity']
       ];
+    //deciding which id to use 
     $loggedUserID = $this->indexMiddleware->loggedUserID();
-      //var_dump($loggedUserID);die();
-    //$user = new Users;
-    If(!$this->model->update($loggedUserID, $fields)){
-      return $this->jsonResponse([
-        'http'=>500,
-        'status'=>'false',
-        'message'=>'Failed to update user account.'
-      ]);
-    };
-
+    $targetID==null?$opsID = $loggedUserID:$opsID = $targetID;
+     //now updating the database
+    If(!$this->model->update($opsID, $fields)) //LOGG SOMETHING
+    return $this->response->SendResponse(500, false, 'Sorry, there is a problem from our end. Our engineers are working on it.');
+    //fetch updated details for display.
     $details = $this->model->findFirst([
-      'conditions' => 'id = ?','bind' => [$loggedUserID]]);
+      'conditions' => 'id = ?','bind' => [$opsID]]);
     $acl = unserialize($details->acl);
     $details->acl = $acl;
 
-    //LOG ACTION
-
-    return $this->jsonResponse([
-      'http'=>200,
-      'status'=>'true',
-      'message'=>'',
-      'data'=>$details
-    ]);
+    return $this->response->SendResponse(200, true, '', false, $details);
 
   }
 
-/*
-===========================================================================
-
-===========================================================================
-*/ 
 
 
+
+  /**
+   * This is the endpoint for logging out of the application. To call this endpoint
+   * make a GET REQUEST to ...ap/user/logout. 
+   * 
+   * POSSIBLE RESPONSES 
+   * 
+   * 1. Returns 401 with "logged out already" message.
+   * 
+   * 2. Returns 200 with a success message.
+   * 
+   * @return [type]
+   */
   public function logoutAction(){
     if(!$this->input->isGet()) return $this->response->SendResponse(
       403, false, GET_MSG
