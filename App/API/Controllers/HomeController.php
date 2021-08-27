@@ -96,8 +96,9 @@ class HomeController extends Controller{
       'acl'=>$acl,
       'entry_code'=>$sanitized['entry_code'],
       'ref_code'=>$refcode,
-      'acc_type'=>'user',
-      'activity'=>'active'
+      'acc_type'=>'member',
+      'activity'=>'active',
+      'date_time'=>date('Y-m-d')
       ];
      
       //check if user already exists in database
@@ -115,9 +116,13 @@ class HomeController extends Controller{
       //Create new account in the database and if it is successful, iniatialize it in fund_user table
       if(!$this->model->insert($fields)) 
       //LOG ACCOUNT CREATION PROBLEM
-      if(!$this->user->initializeAccount($sanitized['username'])){
-        //LOG SOMETHING
-      } 
+     
+      try{
+        $this->user->initializeAccount($sanitized['username']);
+      }catch(PDOException $err){
+
+      }
+     
       //PROCESS REF CODE
       if($sanitized['entry_code'] !== '')
       if($this->user->referralChecker($sanitized['entry_code']))
