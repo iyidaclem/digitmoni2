@@ -22,6 +22,7 @@ class FH{
   $sanitized = [];
   $msg =[];
   foreach($dataArray as $k => $v){
+    
     if($k!='acl'){
       $pureVals = FH::sanitize($v);
     $sanitized[$k] = $pureVals;

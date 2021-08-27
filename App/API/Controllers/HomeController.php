@@ -61,27 +61,30 @@ class HomeController extends Controller{
    * POSSIBLE RESPONSES 
    * 1. 400 with a message about a supplied "input not supplied"
    * 2. 400 with a message about "existing username" or "existing email"
-   * 2. 
+   * 4. Could return 400 with "xxxx input not supplied message."
+   * 5. Could return 200 with "success" message. 
    */
   public function createAction(){
-    echo "create"; die();
     if(!$this->input->isPost()) $this->response->SendResponse(
       401, false, POST_MSG
     );
 
     $putData = file_get_contents('php://input');
     $data = json_decode($putData);
+
    
     //Sanitizing all the input values
     $sanitized = FH::arraySanitize($data);
-    //var_dump(array_keys($sanitized)); die();
+
     $inputKeys=['first_name','lastname','username','email','pword', 'addres','phone','entry_code' ];
     
     if(FH::inputIsset($sanitized, $inputKeys))
 
     $acl = serialize($data->acl); 
-    $password = password_hash($sanitized['pword'],PASSWORD_DEFAULT);
+    $password = password_hash(trim($sanitized['pword']),PASSWORD_DEFAULT);
     $refcode = $this->middleware->rand6();
+    $date = date('Y-m-d');
+   
     //creating input fields array
     $fields=[
       'first_name'=>$sanitized['first_name'],
@@ -89,7 +92,6 @@ class HomeController extends Controller{
       'username'=>$sanitized['username'],
       'email'=>$sanitized['email'],
       'pword'=>$password,
-      'created_at'=>$sanitized['created_at'],
       'state'=>'active',
       'addres'=>$sanitized['addres'],
       'phone'=>$sanitized['phone'], 
@@ -98,9 +100,9 @@ class HomeController extends Controller{
       'ref_code'=>$refcode,
       'acc_type'=>'member',
       'activity'=>'active',
-      'date_time'=>date('Y-m-d')
+      'date_time'=>$date
       ];
-     
+      
       //check if user already exists in database
       $userExist = $this->model->findByUsername('users', $sanitized['username']);
       $emailExist = $this->model->findByEmail('users', $sanitized['email']);
@@ -114,9 +116,10 @@ class HomeController extends Controller{
       }
 
       //Create new account in the database and if it is successful, iniatialize it in fund_user table
-      if(!$this->model->insert($fields)) 
+      if(!$this->model->insert($fields)){
       //LOG ACCOUNT CREATION PROBLEM
-     
+      return $this->response->SendResponse(500, false, "System error. We are on it.");
+      }
       try{
         $this->user->initializeAccount($sanitized['username']);
       }catch(PDOException $err){
@@ -124,15 +127,16 @@ class HomeController extends Controller{
       }
      
       //PROCESS REF CODE
-      if($sanitized['entry_code'] !== '')
-      if($this->user->referralChecker($sanitized['entry_code']))
-      $referrer = $this->user->getReferrer($sanitized['entry_code']);
-      $refFields = [
-        'referrer'=>$referrer,
-        'referred'=>$sanitized['username']
-      ];
-      if(!$this->referralModel->insert($refFields)) {
-        //Logg something
+      if($sanitized['entry_code'] !== ''){
+        if($this->user->referralChecker($sanitized['entry_code']))
+        $referrer = $this->user->getReferrer($sanitized['entry_code']);
+        $refFields = [
+          'referrer'=>$referrer,
+          'referred'=>$sanitized['username']
+        ];
+        if(!$this->referralModel->insert($refFields)) {
+          //Logg something
+        }
       }
       
       //Now send response 
@@ -141,7 +145,7 @@ class HomeController extends Controller{
 
 
   /**
-   * This endpoint (POST REQUEST) ...app/home/login 
+   * This endpoint (POST REQUEST) ...App/home/login?username=Ikechukwu&password=password&user_agent=user_agent
    * when called will need parameters supplied as form data. Needed paramaters are:
    * username, password, user_agent. 
    * 
@@ -156,6 +160,8 @@ class HomeController extends Controller{
    * username:principal to state management in this app.
    * access token
    * token expiry time 
+   * 
+   * 3. Could return 500 with system error message.
    */
   public function loginAction(){   
     if(!$this->input->isPost()) return $this->response->SendResponse(
@@ -171,10 +177,12 @@ class HomeController extends Controller{
     $user_agent = trim($request['user_agent']);
     
     //checking if there is a user with the given username and password
-    $checkUser = $this->model->findByUsernamePassword($username, $password);
-    
-    if(empty($checkUser)) return $this->response->SendResponse(
-      401, false, "Username or password incorrect.");
+
+    $checkUser = $this->model->findByUsername('users',$username);
+    if(!$checkUser) return $this->response->SendResponse(401, false, "There is no such user. Please create account first.");
+    $ver_result = password_verify($_REQUEST['password'], $checkUser->pword);
+
+    if(!$ver_result) return $this->response->SendResponse(401, false, "Incorrect Username or password.");
 
     //preparing fields
     $fields = [
@@ -194,12 +202,13 @@ class HomeController extends Controller{
   try{
     $status = '';
     $model->insert($fields)===true?$status=true:$status=false;
-    if($status)return $this->response->SendResponse(
-     200, false,'',false, ["username"=>$username,"access_token"=>$token,"token_exp"=>$fields['token_exp']]);
   }catch(PDOException $err){
-    
    //LOG
   }
+  if($status)return $this->response->SendResponse(
+    200, false,'',false, ["username"=>$username,"access_token"=>$token,"token_exp"=>$fields['token_exp']]);
+  
+  return $this->response->SendResponse(500, 'System error. We are working on it.');
 }
 
 
@@ -261,10 +270,15 @@ class HomeController extends Controller{
   }
 
   /**
-   * This end
-   * @param mixed $packageID
+   * This end (GET REQUEST) ...app/viewpackage/ID when called returns the details of 
+   * the particular package whose ID was supplied. 
+   * @param mixed $packageID the id of the particular investment the user wants to know 
+   * more about.
    * 
-   * @return [type]
+   * POSSIBLE RESPONSES
+   * 1. 404 with no data
+   * 
+   * 2. 200, with data
    */
   public function viewpackageAction($packageID){
     //making sure it is the right request GET

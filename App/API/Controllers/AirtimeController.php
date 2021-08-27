@@ -76,7 +76,6 @@ class AirtimeController extends Controller{
     $lastInsertID = $this->model->lastIDinserted();
     //API CALL
     $airtimeRequest = $this->airtime->airtimeTopUpCall($sanitized['network'], $sanitized['phone'], $sanitized['amount'], $ref);
-
   }
 
   /**
@@ -110,14 +109,6 @@ class AirtimeController extends Controller{
       $loggedUserName, 'Failed to update his airtime transaction to '.$status, 'failed', 'page', 'high', 'user_agent');
   }
   
-  public function airtime_trx_statusAction(){
-    if(!$this->input->isGet())return $this->resp->SendResponse(
-      403, false, GET_MSG);
-    if(!$this->indexMiddleware->isUser) return $this->resp->SendResponse(
-      402, false, ACL_MSG);
-    //make API call 
-    
-
-  }
+ 
 
 }
