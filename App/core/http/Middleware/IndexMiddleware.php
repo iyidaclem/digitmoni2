@@ -94,7 +94,7 @@ class IndexMiddleware{
     $session['loggedUserID'] = $userdata->id;
     
     //return $session;
-    //var_dump($session);die();
+    // var_dump($session);die();
     $this->sessionData = $session;
   }
 

@@ -54,6 +54,7 @@ class KeysController extends Controller{
    * Ofcourse with each is it's associated descriptions.
    */
   public function retrieve_keyAction($ID){
+
     if(!$this->input->isGet())return $this->resp->SendResponse(401, false, GET_MSG, false, []);
     if(!$this->indexMiddleware->isSuperAdmin()) return $this->resp->SendResponse(
       403, false, ACL_MSG,false, []);
@@ -87,21 +88,24 @@ class KeysController extends Controller{
    * It also returns http status code of 500, and error message if it fails.
    */
   public function update_keyAction($ID){
-    if(!$this->input->isGet())return $this->resp->SendResponse(401, false, GET_MSG, false, []);
+    if(!$this->input->isPut())return $this->resp->SendResponse(401, false, GET_MSG, false, []);
     if(!$this->indexMiddleware->isSuperAdmin()) return $this->resp->SendResponse(
       403, false, ACL_MSG,false, []);
     
     //handle inputs 
-    $jsonData = file_get_contents('input://php');
+    $jsonData = file_get_contents('php://input');
     $data = json_decode($jsonData);
+    
     $sanitized = FH::arraySanitize($data);
+    $enc_key = Encrypt::__encrypt($sanitized['key_token']);
+    $ency_id = Encrypt::__encrypt($sanitized['our_id']);
     $keyFields = [
-      'enc_key'=>$sanitized['key_token'],
-      'key_description'=>$sanitized['description'],
-      'ourID'=>$sanitized['our_id'], 
+      'enc_key'=>$enc_key,
+      'key_description'=>$sanitized['key_desc'],
+      'ourID'=>$ency_id, 
       'ourID_description'=>$sanitized['ourID_desc']
     ];
-    
+   
     //update key
     $updateKeyDetails = $this->keys->update($ID, $keyFields);
     if(!$updateKeyDetails) return $this->resp->SendResponse(
@@ -109,7 +113,7 @@ class KeysController extends Controller{
     
     //log 
     $currentUser = $this->indexMiddleware->loggedUser();
-    $this->logger->log($currentUser,'Changed', "$ID properties", 'page', 'good', 'user_agent');
+    //$this->logger->log($currentUser,'Changed', "$ID properties", 'page', 'good', 'user_agent');
     return $this->resp->SendResponse(200, true, 'Key successfully changed.', false, []);
   }
 

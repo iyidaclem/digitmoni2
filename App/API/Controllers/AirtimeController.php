@@ -76,6 +76,8 @@ class AirtimeController extends Controller{
     $lastInsertID = $this->model->lastIDinserted();
     //API CALL
     $airtimeRequest = $this->airtime->airtimeTopUpCall($sanitized['network'], $sanitized['phone'], $sanitized['amount'], $ref);
+    var_dump($airtimeRequest);die();
+    return $this->resp->SendResponse(200, true, '', false, $airtimeRequest);
   }
 
   /**

@@ -32,7 +32,7 @@ class HomeController extends Controller{
     $this->db = new DataBase();
     $this->response = new Response();
     $this->user = new Users();
-    $this->indexMiddleware = $GLOBALS['indexMiddleware'];
+    // $this->indexMiddleware = $GLOBALS['indexMiddleware'];
     $this->middleware = new Middleware();
     $this->referralModel = new ReferralModel('referrals');
   }
@@ -53,7 +53,7 @@ class HomeController extends Controller{
    *  "pword":"passowrd",
    *  "address":"address",
    *  "phone":"phone",
-   *  "acl":"[acl]", 
+   *  "acl":["member", "superadmin","invAdmin","uAdmin"], Notice that the array is not in quotes and items are in double quotes 
    *  "entry_code":"enter referal code here" 
    * }  
    * @return [type]
